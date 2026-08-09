@@ -1,0 +1,16 @@
+fastapi
+uvicorn[standard]
+python-multipart
+python-dotenv
+google-genai
+pypdf
+python-docx
+yfinance
+pandas
+
+# Ships a static ffmpeg binary so video uploads can be reduced to their audio
+# track without needing Homebrew.
+imageio-ffmpeg
+
+# Testing only: builds a real PDF so extraction is tested against one.
+reportlab

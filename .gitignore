@@ -1,0 +1,17 @@
+node_modules/
+dist/
+
+# Secrets — never commit
+.env
+.env.local
+backend/.env
+
+# Python
+backend/.venv/
+backend/__pycache__/
+backend/*.pyc
+
+.DS_Store
+.vscode/
+backend/callpal.db
+callpal.db

@@ -1,0 +1,102 @@
+NVIDIA CORPORATION (NASDAQ: NVDA)
+Second Quarter Fiscal Year 2025 Earnings Conference Call
+August 28, 2024
+
+NOTE: This is a condensed sample transcript prepared for demonstrating CallPal.
+It paraphrases publicly reported results and is not a verbatim record of the
+call. Figures reflect NVIDIA's publicly announced Q2 FY2025 results.
+
+--------------------------------------------------------------------------
+
+OPERATOR: Good afternoon and welcome to NVIDIA's second quarter fiscal 2025
+earnings call. Joining us are Jensen Huang, President and Chief Executive
+Officer, and Colette Kress, Executive Vice President and Chief Financial
+Officer.
+
+COLETTE KRESS (CFO), PREPARED REMARKS:
+
+Thank you. We delivered another record quarter. Revenue for the second quarter
+was 30.0 billion dollars, up 15 percent sequentially and up 122 percent year
+over year, and well above our outlook of 28.0 billion dollars.
+
+Data Center revenue reached a record 26.3 billion dollars, up 16 percent
+sequentially and up 154 percent year over year. Growth was driven by strong
+demand for the Hopper architecture, and in particular H200, which began
+shipping in volume during the quarter. Cloud service providers represented
+roughly 45 percent of Data Center revenue, with more than 50 percent coming
+from consumer internet and enterprise customers.
+
+Gaming revenue was 2.88 billion dollars, up 9 percent sequentially and up 16
+percent year over year. Professional Visualization was 454 million dollars.
+Automotive was 346 million dollars, up 37 percent year over year, driven by
+autonomous driving platforms.
+
+GAAP gross margin was 75.1 percent and non-GAAP gross margin was 75.7 percent.
+Margins declined sequentially, reflecting a higher mix of new products within
+Data Center and inventory provisions for low-yielding Blackwell material.
+
+Turning to the outlook. For the third quarter, we expect revenue of 32.5
+billion dollars, plus or minus 2 percent. We expect GAAP and non-GAAP gross
+margins of 74.4 percent and 75.0 percent respectively. We expect full year
+gross margins to be in the mid-70s percent range.
+
+I do want to be direct about a few pressures. We executed a change to the
+Blackwell GPU mask to improve production yield, and as a result Blackwell
+production is expected to ramp in the fourth quarter. Gross margins are
+expected to moderate into the low-70s percent range later in the year as we
+ramp new products. Supply for Hopper remains constrained, and we expect demand
+to exceed supply into next year.
+
+JENSEN HUANG (CEO), PREPARED REMARKS:
+
+Hopper demand remains strong and the anticipation for Blackwell is incredible.
+We shipped customer samples of Blackwell in the quarter. The mask change is
+complete and there were no functional changes required.
+
+We are seeing a broad platform shift. General purpose computing is giving way
+to accelerated computing, and there is roughly one trillion dollars of
+installed data center infrastructure that will be modernized over the coming
+years. Generative AI is a second and additive driver on top of that.
+
+Sovereign AI is a new growth vector. We expect sovereign AI revenue in the low
+double digit billions this year, up from nothing a year ago, as nations build
+domestic compute capacity.
+
+QUESTION AND ANSWER SESSION
+
+ANALYST, GOLDMAN SACHS: Jensen, can you address the Blackwell timing concerns?
+There were reports of a delay.
+
+JENSEN HUANG: The change to the mask was to improve yield. Blackwell production
+ramps in the fourth quarter and we expect several billion dollars of Blackwell
+revenue in Q4. Hopper demand continues through that transition. I would not
+characterize this as a delay to the overall ramp.
+
+ANALYST, MORGAN STANLEY: Colette, how should we think about the gross margin
+trajectory?
+
+COLETTE KRESS: We expect margins to move to the low-70s as Blackwell ramps,
+because new product introductions carry higher cost early in the cycle. We
+expect margins to recover as the ramp matures. For the full year we still
+expect mid-70s.
+
+ANALYST, BERNSTEIN: Is there a risk that customers pause Hopper purchases while
+waiting for Blackwell?
+
+JENSEN HUANG: We are not seeing that. Demand for Hopper exceeds supply today.
+Customers need capacity now, and the infrastructure is fungible across both
+architectures.
+
+ANALYST, UBS: Any commentary on China?
+
+COLETTE KRESS: Our Data Center revenue in China grew sequentially and is a
+significant contributor. However, the market there remains very competitive,
+and export controls continue to limit what we can ship. We expect China to
+remain competitive going forward.
+
+ANALYST, TD COWEN: How durable is sovereign demand?
+
+JENSEN HUANG: Every country recognizes that their data is a national resource.
+We think this becomes a persistent category rather than a one-time build.
+
+OPERATOR: That concludes today's call. Thank you for joining.

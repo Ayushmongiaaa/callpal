@@ -1,0 +1,83 @@
+TESLA, INC. (NASDAQ: TSLA)
+First Quarter 2024 Update Call
+April 23, 2024
+
+NOTE: This is a condensed sample transcript prepared for demonstrating CallPal.
+It paraphrases publicly reported results and commentary and is not a verbatim
+record of the call.
+
+--------------------------------------------------------------------------
+
+OPERATOR: Good afternoon and welcome to Tesla's first quarter 2024 update call.
+Joining us are Elon Musk, Chief Executive Officer, and Vaibhav Taneja, Chief
+Financial Officer.
+
+VAIBHAV TANEJA (CFO), PREPARED REMARKS:
+
+Total revenue for the first quarter was 21.3 billion dollars, down 9 percent
+year over year. Automotive revenue declined 13 percent year over year, driven
+by lower average selling prices and lower deliveries.
+
+We delivered 386,810 vehicles in the quarter and produced 433,371, so we built
+meaningfully more than we delivered and inventory increased. Several factors
+weighed on the quarter: the early ramp of the updated Model 3 at Fremont,
+factory shutdowns from shipping diversions in the Red Sea, and the arson
+attack that halted production at Gigafactory Berlin.
+
+Operating income was 1.2 billion dollars and operating margin was 5.5 percent,
+down year over year. GAAP net income was 1.1 billion dollars. Free cash flow
+was negative 2.5 billion dollars in the quarter, reflecting a 2.7 billion
+dollar increase in inventory and 1.0 billion dollars of AI infrastructure
+capital expenditure.
+
+Energy storage deployments reached a record 4.1 gigawatt hours, and energy
+generation and storage gross margin reached a record. Services and Other
+revenue grew 25 percent year over year.
+
+On the outlook, we are between two major growth waves. We expect the vehicle
+volume growth rate in 2024 to be notably lower than the growth rate achieved
+in 2023. We are updating our future vehicle lineup to accelerate the launch of
+new models ahead of our previously communicated start of production in the
+second half of 2025.
+
+ELON MUSK (CEO), PREPARED REMARKS:
+
+Regarding the product roadmap, we have updated our plan to accelerate the
+launch of new models. These will use aspects of the next generation platform
+as well as aspects of our current platforms, and will be produced on the same
+manufacturing lines as our current lineup. This is more capital efficient than
+building entirely new lines.
+
+On autonomy, we recently released a version of Full Self-Driving that is a
+significant improvement. We are also in discussions with a major automaker
+about licensing FSD.
+
+Energy storage will grow much faster than the automotive business. We think
+the stationary storage business is going to be extremely large.
+
+QUESTION AND ANSWER SESSION
+
+ANALYST, DEUTSCHE BANK: Can you clarify the timing on the new models?
+
+ELON MUSK: We expect to begin production of new models in early 2025, possibly
+late this year. That is ahead of the prior plan.
+
+ANALYST, WEDBUSH: How should we think about margins from here?
+
+VAIBHAV TANEJA: Pricing remains a challenge. We expect continued pressure on
+automotive gross margin in the near term as we balance volume and price. We
+are focused on cost reduction per vehicle, which declined again this quarter.
+
+ANALYST, MORGAN STANLEY: What is the capital commitment to AI?
+
+ELON MUSK: We expect capital expenditures to exceed 10 billion dollars this
+year, with a substantial portion going to AI compute. We are installing
+significant training capacity. That said, I want to be clear that this is a
+large spend and it does compress near-term free cash flow.
+
+ANALYST, CANACCORD: Any comment on demand in China?
+
+VAIBHAV TANEJA: The market there is highly competitive and price competition
+has intensified. We continue to see pressure on pricing across the region.
+
+OPERATOR: That concludes today's call. Thank you.

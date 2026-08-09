@@ -1,0 +1,5154 @@
+/* =========================================================
+   CALLPAL DESIGN SYSTEM
+   Deep navy/purple, glassmorphism, hand-written CSS (no Tailwind)
+   ========================================================= */
+
+:root {
+  --bg-deep: #070311;
+  --bg-base: #0c0620;
+  --bg-raise: #130a2b;
+
+  --glass: rgba(255, 255, 255, 0.045);
+  --glass-strong: rgba(255, 255, 255, 0.075);
+  --glass-border: rgba(167, 139, 250, 0.16);
+  --glass-border-soft: rgba(167, 139, 250, 0.09);
+
+  --violet: #a78bfa;
+  --violet-bright: #c4b5fd;
+  --violet-deep: #7c3aed;
+  --violet-glow: rgba(139, 92, 246, 0.35);
+
+  --text: #f4f2fb;
+  /* Body copy that should sit just below the brightest text. This was used in
+     eight rules before it existed, which made every one of them a no-op —
+     an undefined custom property makes the whole declaration invalid, so the
+     colour silently fell back to whatever was inherited. */
+  --text-dim: #d2ccE4;
+  --muted: #bcb4d6;
+  --subtle: #8a82ab;
+
+  --green: #34d399;
+  --green-soft: rgba(52, 211, 153, 0.14);
+  --red: #f87171;
+  --red-soft: rgba(248, 113, 113, 0.14);
+  --orange: #fbbf24;
+  --orange-soft: rgba(251, 191, 36, 0.14);
+
+  /* Five radii, and only five. The report on vibe-coded sites calls out
+     mismatched corner radii as one of the clearest tells, and this sheet had
+     eighteen distinct values. Anything at 5px or below is left alone — those
+     are hairlines and the cube faces, where the number is physical rather
+     than a component decision. */
+  --r-xs: 6px;    /* chips, badges, tags        */
+  --r-sm: 10px;   /* buttons, inputs, icon tiles */
+  --r-md: 14px;   /* cards nested inside panels  */
+  --r-lg: 18px;   /* top-level panels            */
+  --r-full: 999px;
+
+  --radius: var(--r-lg);
+  --radius-sm: var(--r-md);
+  --radius-xs: var(--r-xs);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  color: var(--text);
+  background: var(--bg-deep);
+  /* Outfit is the geometric rounded sans in the approved mockup. Without it the
+     whole thing reads as a default system-font app. */
+  font-family: "Outfit", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+    Helvetica, Arial, sans-serif;
+  font-weight: 400;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Numbers should not jitter when values change */
+.metric-value,
+.tip strong,
+.pill {
+  font-variant-numeric: tabular-nums;
+}
+
+/* Ambient purple glows behind the whole app */
+/* Near-black at the edges with violet blooms behind the content, so the glass
+   panels have something to actually refract. */
+.app-bg {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  background:
+    radial-gradient(
+      760px 520px at 18% 0%,
+      rgba(124, 58, 237, 0.34),
+      transparent 58%
+    ),
+    radial-gradient(
+      680px 460px at 82% 4%,
+      rgba(167, 139, 250, 0.2),
+      transparent 60%
+    ),
+    radial-gradient(
+      900px 620px at 52% 108%,
+      rgba(91, 33, 182, 0.26),
+      transparent 62%
+    ),
+    radial-gradient(
+      1200px 900px at 50% 50%,
+      rgba(30, 16, 60, 0.7),
+      transparent 70%
+    ),
+    var(--bg-deep);
+  pointer-events: none;
+}
+
+.app-shell {
+  position: relative;
+  z-index: 1;
+  min-height: 100vh;
+  display: grid;
+  grid-template-columns: 236px minmax(0, 1fr) 330px;
+  gap: 26px;
+  padding: 26px 28px;
+}
+
+/* ---------- shared glass surface ---------- */
+
+/* The signature surface. Three things make it read as real glass rather than a
+   flat translucent box:
+     1. a violet-tinted gradient that is lighter at the top-left
+     2. a bright 1px inner highlight along the top edge, like light catching a
+        bevel, plus a darker inner line along the bottom
+     3. a deep ambient shadow so the card floats off the background          */
+.glass {
+  position: relative;
+  background:
+    linear-gradient(
+      158deg,
+      rgba(167, 139, 250, 0.13) 0%,
+      rgba(139, 92, 246, 0.05) 38%,
+      rgba(255, 255, 255, 0.022) 100%
+    ),
+    rgba(23, 14, 46, 0.55);
+  border: 1px solid rgba(167, 139, 250, 0.2);
+  border-radius: var(--radius);
+  backdrop-filter: blur(26px) saturate(140%);
+  -webkit-backdrop-filter: blur(26px) saturate(140%);
+  box-shadow:
+    0 1px 0 rgba(233, 226, 255, 0.16) inset,
+    0 -1px 0 rgba(10, 4, 26, 0.5) inset,
+    0 22px 50px rgba(5, 2, 16, 0.55);
+}
+
+/* A hairline of light along the very top edge, brightest in the middle. This is
+   the detail that separates a designed glass panel from a plain rgba box. */
+.glass::before {
+  content: "";
+  position: absolute;
+  top: -1px;
+  left: 12%;
+  right: 12%;
+  height: 1px;
+  border-radius: 1px;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(226, 214, 255, 0.55),
+    transparent
+  );
+  pointer-events: none;
+}
+
+.panel-title {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+
+.panel-sub {
+  margin: 4px 0 0;
+  color: var(--muted);
+  font-size: 11px;
+}
+
+/* ---------- sidebar ---------- */
+
+.sidebar {
+  padding: 20px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 26px;
+  position: sticky;
+  top: 18px;
+  height: calc(100vh - 36px);
+  /* Stronger violet at the top fading down the panel, matching the design. */
+  background:
+    linear-gradient(
+      180deg,
+      rgba(139, 92, 246, 0.16) 0%,
+      rgba(124, 58, 237, 0.05) 30%,
+      rgba(255, 255, 255, 0.015) 100%
+    ),
+    rgba(21, 12, 43, 0.62);
+}
+
+/* ---------- frosted light cards ----------
+   The metric row is the part a recruiter reads first, so it gets the brightest
+   treatment: a near-white frosted surface with a crisp violet border. Text
+   flips to dark tones on these so contrast stays high. */
+.metric {
+  background:
+    linear-gradient(
+      158deg,
+      rgba(255, 255, 255, 0.93) 0%,
+      rgba(243, 240, 255, 0.88) 55%,
+      rgba(232, 226, 252, 0.85) 100%
+    );
+  border: 1px solid rgba(139, 92, 246, 0.45);
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.9) inset,
+    0 18px 38px rgba(5, 2, 16, 0.5),
+    0 0 0 1px rgba(167, 139, 250, 0.12);
+}
+
+.metric::before {
+  display: none;
+}
+
+.metric .metric-head {
+  color: #6b5f96;
+}
+
+.metric .metric-value {
+  color: #1c1233;
+}
+
+.metric .metric-value small,
+.metric .metric-note {
+  color: #6b5f96;
+}
+
+.metric .metric-head svg {
+  color: var(--violet-deep);
+}
+
+/* Tone colours need to be darker to read on a light surface */
+.metric .tone-green {
+  color: #0f9b6c;
+}
+
+.metric .tone-red {
+  color: #d1435b;
+}
+
+.metric .tone-orange {
+  color: #b47708;
+}
+
+.metric .tone-violet {
+  color: #6d28d9;
+}
+
+.metric .dots i {
+  background: rgba(28, 18, 51, 0.16);
+}
+
+.metric .dots i.on {
+  background: #b47708;
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 0 6px;
+}
+
+.brand-mark {
+  width: 32px;
+  height: 32px;
+  display: grid;
+  place-items: center;
+  border-radius: var(--r-sm);
+  background: linear-gradient(145deg, var(--violet), var(--violet-deep));
+  box-shadow: 0 0 22px var(--violet-glow);
+  color: #16062e;
+}
+
+.brand-name {
+  font-size: 17px;
+  font-weight: 750;
+  letter-spacing: -0.02em;
+}
+
+.nav {
+  display: grid;
+  gap: 3px;
+}
+
+.nav-item {
+  width: 100%;
+  padding: 10px 11px;
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  border: 1px solid transparent;
+  border-radius: var(--r-sm);
+  background: transparent;
+  color: var(--muted);
+  font-size: 13px;
+  font-family: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition:
+    background 0.16s ease,
+    color 0.16s ease;
+}
+
+.nav-item:hover {
+  background: rgba(167, 139, 250, 0.07);
+  color: var(--text);
+}
+
+.nav-item.active {
+  color: var(--text);
+  background: linear-gradient(
+    100deg,
+    rgba(139, 92, 246, 0.28),
+    rgba(139, 92, 246, 0.08)
+  );
+  border-color: var(--glass-border);
+  box-shadow: 0 0 18px rgba(139, 92, 246, 0.16);
+}
+
+.sidebar-foot {
+  margin-top: auto;
+  padding: 12px 8px 2px;
+  display: grid;
+  gap: 2px;
+  border-top: 1px solid var(--glass-border-soft);
+}
+
+.sidebar-foot span:first-child {
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.sidebar-foot span:last-child {
+  color: var(--subtle);
+  font-size: 9px;
+}
+
+.change-box.down {
+  background: var(--red-soft);
+  border-color: rgba(248, 113, 113, 0.25);
+}
+
+.change-box.down strong {
+  color: var(--red);
+}
+
+.toggle-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.no-data {
+  margin-left: auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  color: var(--orange);
+  font-size: 10px;
+}
+
+/* ---------- main column ---------- */
+
+.main {
+  min-width: 0;
+  display: grid;
+  gap: 22px;
+  align-content: start;
+}
+
+/* ---------- topbar ---------- */
+
+.topbar {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.search {
+  flex: 1;
+  min-width: 0;
+  padding: 11px 14px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  border-radius: var(--r-md);
+}
+
+.search input {
+  flex: 1;
+  min-width: 0;
+  border: 0;
+  outline: none;
+  background: transparent;
+  color: var(--text);
+  font-family: inherit;
+  font-size: 13px;
+}
+
+.search input::placeholder {
+  color: var(--subtle);
+}
+
+.kbd {
+  padding: 3px 7px;
+  border: 1px solid var(--glass-border-soft);
+  border-radius: var(--r-xs);
+  color: var(--subtle);
+  font-size: 10px;
+}
+
+.icon-btn {
+  width: 38px;
+  height: 38px;
+  display: grid;
+  place-items: center;
+  border-radius: var(--r-sm);
+  color: var(--muted);
+  cursor: pointer;
+  background: var(--glass);
+  border: 1px solid var(--glass-border-soft);
+}
+
+.icon-btn:hover {
+  color: var(--text);
+}
+
+.user {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  height: 38px;
+  padding: 0 14px 0 11px;
+  border-radius: var(--r-sm);
+  border: 1px solid var(--glass-border-soft);
+  background: rgba(167, 139, 250, 0.09);
+  color: var(--text);
+  font-size: 12.5px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.user svg {
+  color: var(--violet-bright);
+}
+
+/* ---------- upload + featured row ---------- */
+
+.hero-grid {
+  display: grid;
+  grid-template-columns: minmax(220px, 0.62fr) minmax(0, 1.38fr);
+  gap: 22px;
+}
+
+.upload-card {
+  padding: 22px 18px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  gap: 12px;
+  border-style: dashed;
+  cursor: pointer;
+  transition:
+    border-color 0.18s ease,
+    background 0.18s ease;
+}
+
+.upload-card:hover {
+  border-color: rgba(167, 139, 250, 0.4);
+  background: var(--glass-strong);
+}
+
+.upload-icon {
+  width: 52px;
+  height: 52px;
+  display: grid;
+  place-items: center;
+  border-radius: var(--r-lg);
+  color: var(--violet-bright);
+  background: linear-gradient(
+    150deg,
+    rgba(167, 139, 250, 0.25),
+    rgba(124, 58, 237, 0.1)
+  );
+  border: 1px solid var(--glass-border);
+  box-shadow: 0 0 26px var(--violet-glow);
+}
+
+/* The busy state set this class but nothing ever defined it, so the spinner
+   sat perfectly still while the call was being analyzed. */
+.upload-icon.spin svg {
+  animation: spin 0.9s linear infinite;
+}
+
+.upload-card h3 {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.upload-card p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 11px;
+  line-height: 1.5;
+}
+
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 6px;
+}
+
+.chip {
+  padding: 4px 9px;
+  border: 1px solid var(--glass-border-soft);
+  border-radius: var(--r-xs);
+  background: rgba(255, 255, 255, 0.03);
+  color: var(--muted);
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+}
+
+.upload-limit {
+  color: var(--subtle);
+  font-size: 10px;
+}
+
+/* ---------- featured call ---------- */
+
+.featured {
+  position: relative;
+  padding: 20px 22px;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 18px;
+  overflow: hidden;
+}
+
+/* Violet bloom behind the cubes, as in the approved design. Sits above the card
+   background but below the content. */
+.featured::after {
+  content: "";
+  position: absolute;
+  top: -30%;
+  right: -6%;
+  width: 62%;
+  height: 150%;
+  background: radial-gradient(
+    ellipse at 60% 45%,
+    rgba(139, 92, 246, 0.5),
+    rgba(124, 58, 237, 0.16) 42%,
+    transparent 68%
+  );
+  pointer-events: none;
+  z-index: 0;
+}
+
+.featured > * {
+  position: relative;
+  z-index: 1;
+}
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 9px;
+  border-radius: var(--r-xs);
+  background: rgba(167, 139, 250, 0.16);
+  border: 1px solid var(--glass-border);
+  color: var(--violet-bright);
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+}
+
+.featured h2 {
+  margin: 12px 0 0;
+  font-size: 21px;
+  font-weight: 750;
+  letter-spacing: -0.025em;
+}
+
+.featured-meta {
+  margin-top: 10px;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 16px;
+  color: var(--muted);
+  font-size: 11px;
+}
+
+.featured-meta span {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.ticker-dot {
+  width: 20px;
+  height: 20px;
+  display: inline-grid;
+  place-items: center;
+  border-radius: var(--r-xs);
+  background: rgba(255, 255, 255, 0.07);
+  border: 1px solid var(--glass-border-soft);
+}
+
+.brand-tm {
+  margin-left: 1px;
+  color: var(--violet-bright);
+  font-size: 8px;
+  font-weight: 600;
+  vertical-align: super;
+}
+
+.featured p.blurb {
+  margin: 14px 0 0;
+  max-width: 46ch;
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.6;
+}
+
+.featured-actions {
+  margin-top: 18px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.btn-primary,
+.btn-ghost {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 9px 14px;
+  border-radius: var(--r-sm);
+  font-family: inherit;
+  font-size: 11px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.btn-primary {
+  border: 0;
+  background: linear-gradient(120deg, var(--violet), var(--violet-deep));
+  color: #fff;
+  box-shadow: 0 8px 22px rgba(124, 58, 237, 0.35);
+}
+
+.btn-ghost {
+  background: var(--glass);
+  border: 1px solid var(--glass-border);
+  color: var(--text);
+}
+
+/* ---------- stacked glass cubes (real CSS 3D) ---------- */
+
+.cube-wrap {
+  display: grid;
+  place-items: center;
+  min-width: 210px;
+}
+
+.cube-scene {
+  position: relative;
+  width: 210px;
+  height: 210px;
+  display: grid;
+  place-items: center;
+  perspective: 780px;
+}
+
+.cube-stack {
+  position: relative;
+  width: 150px;
+  height: 190px;
+  transform-style: preserve-3d;
+  /* Steeper X tilt so the top faces are clearly visible — that is what makes
+     the stack read as two solid cubes rather than one rounded mass. */
+  transform: rotateX(-26deg) rotateY(-32deg);
+  animation: cubeFloat 8s ease-in-out infinite;
+  will-change: transform;
+}
+
+@keyframes cubeFloat {
+  0%,
+  100% {
+    transform: rotateX(-26deg) rotateY(-32deg) translateY(0);
+  }
+  50% {
+    transform: rotateX(-23deg) rotateY(-26deg) translateY(-10px);
+  }
+}
+
+.cube3d {
+  position: absolute;
+  transform-style: preserve-3d;
+  will-change: transform;
+  /* Keeps the edges from being resampled softly while the stack floats. */
+  -webkit-font-smoothing: antialiased;
+}
+
+.cube-base {
+  left: 10px;
+  bottom: 0;
+}
+
+/* Seated exactly on top of the base and centred on it. Overlapping the two
+   cubes makes their faces coplanar, and coplanar faces in a preserve-3d scene
+   z-fight — which is what made the stack flicker. */
+.cube-top {
+  left: 29px;
+  bottom: 116px;
+  transform: rotateY(20deg);
+}
+
+.face {
+  position: absolute;
+  /* A small radius. Softened corners are what make these read as the glossy
+     rendered blocks from the reference rather than a wireframe box. */
+  border-radius: 5px;
+  border: 1px solid rgba(214, 200, 255, 0.5);
+  /* Rear faces are never meant to be seen. Without this they show through the
+     translucent front, doubling every edge. */
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  /* No backdrop-filter here: a blur on each of six transformed, animating
+     faces forces six compositing layers that flicker against each other. The
+     gradients and the light hairline carry the glass look on their own. */
+}
+
+/* Light from above-left. The tonal gap between faces is what sells the volume. */
+.face-top {
+  background: linear-gradient(
+    135deg,
+    rgba(233, 226, 255, 0.72),
+    rgba(178, 152, 255, 0.5)
+  );
+  border-color: rgba(245, 240, 255, 0.85);
+  box-shadow: 0 0 26px rgba(196, 181, 253, 0.4);
+}
+
+/* The logo lives on the front face, not the top. At this viewing angle the top
+   face is foreshortened almost to a sliver, so a badge up there is unreadable. */
+.face-front {
+  background: linear-gradient(
+    165deg,
+    rgba(167, 139, 250, 0.52),
+    rgba(109, 40, 217, 0.42)
+  );
+  display: grid;
+  place-items: center;
+  /* The cube is viewed from above, so the geometric centre of the front face
+     sits visually low. Lift the badge to compensate. */
+  padding-bottom: 12px;
+}
+
+.face-right {
+  background: linear-gradient(
+    165deg,
+    rgba(124, 58, 237, 0.4),
+    rgba(76, 29, 149, 0.34)
+  );
+}
+
+.face-left {
+  background: linear-gradient(
+    165deg,
+    rgba(91, 33, 182, 0.34),
+    rgba(49, 16, 106, 0.3)
+  );
+}
+
+.face-badge {
+  width: 44px;
+  height: 44px;
+  /* Inner padding, not just centring: favicons vary wildly in how much
+     whitespace they carry. NVIDIA's has its own margin, Tesla's runs to the
+     edge of the file — without padding here the second one looks like it is
+     bursting out of the chip. */
+  padding: 7px;
+  display: grid;
+  place-items: center;
+  border-radius: var(--r-md);
+  background: #ffffff;
+  box-shadow: 0 5px 16px rgba(46, 16, 101, 0.4);
+}
+
+/* The logo fills whatever room the padding leaves, keeping its aspect ratio.
+   The badge is already white, so the image must not add its own chip on top. */
+.face-badge .company-logo,
+.face-badge .company-logo-img,
+.face-badge svg {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  padding: 0;
+  background: transparent;
+  border-radius: 0;
+}
+
+.cube-glow {
+  position: absolute;
+  bottom: 22px;
+  width: 170px;
+  height: 60px;
+  border-radius: 50%;
+  background: radial-gradient(
+    ellipse at center,
+    rgba(139, 92, 246, 0.55),
+    transparent 68%
+  );
+  filter: blur(16px);
+  z-index: -1;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cube-stack {
+    animation: none;
+  }
+}
+
+/* ---------- metric cards ---------- */
+
+.metrics {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 18px;
+}
+
+.metric {
+  padding: 18px 18px 16px;
+  min-height: 118px;
+  display: grid;
+  gap: 4px;
+  align-content: start;
+}
+
+.metric-head {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  color: var(--muted);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.metric-value {
+  margin-top: 6px;
+  font-size: 25px;
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  line-height: 1.05;
+}
+
+.metric-value small {
+  color: var(--subtle);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.metric-note {
+  color: var(--muted);
+  font-size: 10px;
+}
+
+.metric-chart {
+  margin-top: 6px;
+  height: 34px;
+}
+
+.tone-green {
+  color: var(--green);
+}
+.tone-red {
+  color: var(--red);
+}
+.tone-orange {
+  color: var(--orange);
+}
+.tone-violet {
+  color: var(--violet-bright);
+}
+
+.dots {
+  display: flex;
+  gap: 4px;
+  margin-top: 8px;
+}
+
+.dots i {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.14);
+}
+
+.dots i.on {
+  background: var(--orange);
+}
+
+/* ---------- bottom row ---------- */
+
+.bottom-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.35fr) minmax(0, 1fr);
+  gap: 22px;
+}
+
+.panel-head {
+  padding: 15px 17px 12px;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 14px;
+  border-bottom: 1px solid var(--glass-border-soft);
+}
+
+/* segmented toggle under the chart title */
+.toggle {
+  margin-top: 10px;
+  display: inline-flex;
+  gap: 3px;
+  padding: 3px;
+  border-radius: var(--r-sm);
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid var(--glass-border-soft);
+}
+
+.toggle-btn {
+  padding: 5px 11px;
+  border: 0;
+  border-radius: var(--r-xs);
+  background: transparent;
+  color: var(--muted);
+  font-family: inherit;
+  font-size: 10px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.toggle-btn.on {
+  color: var(--text);
+  background: linear-gradient(120deg, var(--violet-deep), rgba(139, 92, 246, 0.6));
+  box-shadow: 0 0 14px rgba(139, 92, 246, 0.3);
+}
+
+.title-info {
+  margin-left: 5px;
+  color: var(--subtle);
+  vertical-align: middle;
+}
+
+.head-right {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.change-box {
+  padding: 6px 11px;
+  border-radius: var(--r-sm);
+  background: var(--green-soft);
+  border: 1px solid rgba(52, 211, 153, 0.25);
+  text-align: center;
+}
+
+.change-box strong {
+  display: block;
+  color: var(--green);
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.change-box span {
+  display: block;
+  margin-top: 1px;
+  color: var(--muted);
+  font-size: 8px;
+}
+
+.legend {
+  padding: 10px 17px 0;
+  display: flex;
+  align-items: center;
+  gap: 13px;
+  color: var(--muted);
+  font-size: 10px;
+}
+
+.legend-price {
+  margin-left: auto;
+}
+
+.legend-price em {
+  width: 14px;
+  height: 2px;
+  border-radius: 2px;
+  background: var(--violet-bright);
+  display: inline-block;
+}
+
+.legend span {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.legend i {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.pill {
+  padding: 4px 9px;
+  border-radius: var(--r-xs);
+  font-size: 10px;
+  font-weight: 800;
+}
+
+.pill-green {
+  color: var(--green);
+  background: var(--green-soft);
+  border: 1px solid rgba(52, 211, 153, 0.25);
+}
+
+.chart-body {
+  flex: 1;
+  min-height: 236px;
+  padding: 12px 12px 6px 0;
+}
+
+/* the chart panel stretches to match Key Takeaways, so let the chart grow
+   into that space instead of leaving a gap under it */
+.bottom-grid > section {
+  display: flex;
+  flex-direction: column;
+}
+
+/* ---------- takeaways ---------- */
+
+.takeaways {
+  padding: 14px 15px 12px;
+  display: grid;
+  gap: 12px;
+}
+
+/* Each polarity sits in its own tinted, bordered block — that separation is
+   what makes the mockup read as a designed panel rather than two plain lists. */
+.take-group {
+  padding: 12px 13px;
+  border-radius: var(--radius-sm);
+}
+
+.take-bull {
+  background: rgba(52, 211, 153, 0.07);
+  border: 1px solid rgba(52, 211, 153, 0.18);
+}
+
+.take-bear {
+  background: rgba(248, 113, 113, 0.07);
+  border: 1px solid rgba(248, 113, 113, 0.18);
+}
+
+.take-group h4 {
+  margin: 0 0 9px;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.take-group ul {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 7px;
+}
+
+.take-group li {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  color: var(--muted);
+  font-size: 11px;
+  line-height: 1.45;
+}
+
+.take-group li svg {
+  flex: 0 0 auto;
+  margin-top: 2px;
+}
+
+.take-bull li svg {
+  color: var(--green);
+}
+
+.take-bear li svg {
+  color: var(--red);
+}
+
+.link-row {
+  margin-top: 4px;
+  padding: 11px 17px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  border-top: 1px solid var(--glass-border-soft);
+  color: var(--violet-bright);
+  font-size: 10px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+/* ---------- right rail ---------- */
+
+.rail {
+  min-width: 0;
+  display: grid;
+  gap: 16px;
+  align-content: start;
+  position: sticky;
+  top: 18px;
+  /* room for the fixed sample-transcript card so it never covers content */
+  padding-bottom: 104px;
+}
+
+.assistant {
+  display: grid;
+  align-content: start;
+}
+
+/* buttons and inputs pick up a subtle gradient too, matching the design */
+.btn-primary,
+.upgrade-btn,
+.send-btn,
+.tour-next {
+  background: linear-gradient(135deg, #a78bfa 0%, #8b5cf6 45%, #6d28d9 100%);
+}
+
+.badge,
+.chip,
+.kbd,
+.pill {
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+
+.nav-item.active {
+  background: linear-gradient(
+    100deg,
+    rgba(139, 92, 246, 0.42),
+    rgba(139, 92, 246, 0.12)
+  );
+  border-color: rgba(167, 139, 250, 0.34);
+  box-shadow:
+    0 1px 0 rgba(233, 226, 255, 0.2) inset,
+    0 0 22px rgba(139, 92, 246, 0.22);
+}
+
+.assistant-head {
+  padding: 14px 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid var(--glass-border-soft);
+}
+
+.assistant-head strong {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  font-weight: 750;
+}
+
+.online {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  color: var(--green);
+  font-size: 9px;
+  font-weight: 700;
+}
+
+.online i {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--green);
+  box-shadow: 0 0 0 3px var(--green-soft);
+}
+
+.assistant-body {
+  padding: 14px 14px 10px;
+  display: grid;
+  gap: 9px;
+}
+
+.bubble {
+  padding: 11px 12px;
+  border-radius: var(--r-md);
+  background: linear-gradient(
+    150deg,
+    rgba(139, 92, 246, 0.2),
+    rgba(139, 92, 246, 0.06)
+  );
+  border: 1px solid var(--glass-border);
+  font-size: 11px;
+  line-height: 1.55;
+}
+
+.bubble strong {
+  display: block;
+  margin-bottom: 3px;
+  font-size: 11px;
+}
+
+.bubble p {
+  margin: 0;
+  color: var(--muted);
+}
+
+.suggest {
+  width: 100%;
+  padding: 10px 12px;
+  border-radius: var(--r-sm);
+  background: rgba(255, 255, 255, 0.035);
+  border: 1px solid var(--glass-border-soft);
+  color: var(--muted);
+  font-family: inherit;
+  font-size: 11px;
+  line-height: 1.45;
+  text-align: left;
+  cursor: pointer;
+  transition:
+    color 0.16s ease,
+    border-color 0.16s ease;
+}
+
+.suggest:hover {
+  color: var(--text);
+  border-color: var(--glass-border);
+}
+
+.ask-row {
+  margin: 4px 14px 12px;
+  padding: 7px 7px 7px 13px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  border-radius: var(--r-md);
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid var(--glass-border-soft);
+}
+
+.ask-row input {
+  flex: 1;
+  min-width: 0;
+  border: 0;
+  outline: none;
+  background: transparent;
+  color: var(--text);
+  font-family: inherit;
+  font-size: 11px;
+}
+
+.ask-row input::placeholder {
+  color: var(--subtle);
+}
+
+.send-btn {
+  width: 30px;
+  height: 30px;
+  flex: 0 0 auto;
+  display: grid;
+  place-items: center;
+  border: 0;
+  border-radius: var(--r-sm);
+  background: linear-gradient(120deg, var(--violet), var(--violet-deep));
+  color: #fff;
+  cursor: pointer;
+}
+
+.disclaimer {
+  padding: 0 16px 14px;
+  color: var(--subtle);
+  font-size: 9px;
+  line-height: 1.5;
+  text-align: center;
+}
+
+/* ---------- recent calls ---------- */
+
+.recent-head {
+  padding: 14px 16px 10px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.view-all {
+  color: var(--violet-bright);
+  font-size: 10px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.recent-list {
+  padding: 0 10px 8px;
+  display: grid;
+  gap: 2px;
+}
+
+.recent-item {
+  padding: 10px 8px;
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  border-radius: var(--r-sm);
+  cursor: pointer;
+}
+
+.recent-item:hover {
+  background: rgba(167, 139, 250, 0.07);
+}
+
+.recent-logo {
+  width: 32px;
+  height: 32px;
+  flex: 0 0 auto;
+  display: grid;
+  place-items: center;
+  border-radius: var(--r-sm);
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid var(--glass-border-soft);
+  color: var(--muted);
+}
+
+.recent-item strong {
+  display: block;
+  font-size: 11px;
+  font-weight: 650;
+}
+
+.recent-item span {
+  display: block;
+  margin-top: 2px;
+  color: var(--subtle);
+  font-size: 9px;
+}
+
+.browse-all {
+  padding: 11px 16px;
+  border-top: 1px solid var(--glass-border-soft);
+  color: var(--muted);
+  font-size: 10px;
+  text-align: center;
+  cursor: pointer;
+}
+
+/* ---------- footer ---------- */
+
+.foot {
+  padding: 2px 4px 6px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  color: var(--subtle);
+  font-size: 9px;
+}
+
+/* ---------- upload states, banner, chat thread, evidence ---------- */
+
+.upload-card.over {
+  border-color: rgba(167, 139, 250, 0.8);
+  background: var(--glass-strong);
+  transform: scale(1.01);
+}
+
+.upload-card.busy {
+  cursor: progress;
+}
+
+.upload-error {
+  display: flex;
+  align-items: flex-start;
+  gap: 7px;
+  padding: 9px 11px;
+  border-radius: var(--r-sm);
+  background: var(--red-soft);
+  border: 1px solid rgba(248, 113, 113, 0.28);
+  color: var(--red);
+  font-size: 10px;
+  line-height: 1.45;
+  text-align: left;
+}
+
+.demo-banner {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 9px 14px;
+  border-radius: var(--r-sm);
+  background: rgba(251, 191, 36, 0.09);
+  border: 1px solid rgba(251, 191, 36, 0.24);
+  color: var(--orange);
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.demo-banner.live {
+  background: var(--green-soft);
+  border-color: rgba(52, 211, 153, 0.26);
+  color: var(--green);
+}
+
+.demo-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--orange);
+  box-shadow: 0 0 0 3px rgba(251, 191, 36, 0.16);
+}
+
+.demo-dot.live {
+  background: var(--green);
+  box-shadow: 0 0 0 3px var(--green-soft);
+}
+
+.demo-reset {
+  margin-left: auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 5px 10px;
+  border-radius: var(--r-xs);
+  border: 1px solid currentColor;
+  background: transparent;
+  color: inherit;
+  font-family: inherit;
+  font-size: 10px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.risk-list {
+  margin-top: 6px;
+  color: #6b5f96;
+  font-size: 9px;
+  line-height: 1.35;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* chat thread */
+.assistant-body {
+  max-height: 380px;
+  overflow-y: auto;
+}
+
+.msg {
+  padding: 10px 12px;
+  border-radius: var(--r-md);
+  font-size: 11px;
+  line-height: 1.55;
+}
+
+.msg p {
+  margin: 0;
+}
+
+.msg-user {
+  align-self: flex-end;
+  margin-left: 28px;
+  background: linear-gradient(135deg, rgba(167, 139, 250, 0.34), rgba(124, 58, 237, 0.24));
+  border: 1px solid var(--glass-border);
+  color: var(--text);
+}
+
+.msg-bot {
+  margin-right: 20px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--glass-border-soft);
+  color: var(--muted);
+}
+
+.msg-error {
+  background: var(--red-soft);
+  border-color: rgba(248, 113, 113, 0.26);
+  color: var(--red);
+}
+
+.msg-thinking {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--subtle);
+}
+
+.msg-flag {
+  display: inline-block;
+  margin-top: 7px;
+  padding: 3px 7px;
+  border-radius: 5px;
+  background: rgba(251, 191, 36, 0.12);
+  border: 1px solid rgba(251, 191, 36, 0.24);
+  color: var(--orange);
+  font-size: 9px;
+  font-weight: 700;
+}
+
+.msg-cites {
+  margin-top: 8px;
+}
+
+.msg-cites summary {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  color: var(--violet-bright);
+  font-size: 9px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.msg-cites blockquote {
+  margin: 7px 0 0;
+  padding: 8px 10px;
+  border-left: 2px solid var(--violet);
+  border-radius: 0 7px 7px 0;
+  background: rgba(167, 139, 250, 0.08);
+  color: var(--muted);
+  font-size: 10px;
+  line-height: 1.5;
+}
+
+/* evidence under takeaway points */
+.point-body {
+  flex: 1;
+  min-width: 0;
+}
+
+.point-text {
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font-family: inherit;
+  font-size: 11px;
+  line-height: 1.45;
+  text-align: left;
+  cursor: pointer;
+}
+
+.point-text:disabled {
+  cursor: default;
+}
+
+.point-quote {
+  margin-left: 5px;
+  opacity: 0.55;
+  vertical-align: middle;
+}
+
+.point-source {
+  margin-top: 7px;
+  padding: 8px 10px;
+  border-radius: var(--r-xs);
+  background: rgba(255, 255, 255, 0.05);
+  border-left: 2px solid currentColor;
+}
+
+.point-source.bull {
+  color: var(--green);
+}
+
+.point-source.bear {
+  color: var(--red);
+}
+
+.point-who {
+  display: block;
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+}
+
+.point-source blockquote {
+  margin: 5px 0 0;
+  color: var(--muted);
+  font-size: 10px;
+  font-style: italic;
+  line-height: 1.5;
+}
+
+.take-group li.none {
+  color: var(--subtle);
+  font-style: italic;
+}
+
+/* ---------- draggable sample transcript ---------- */
+
+.sample-card {
+  position: fixed;
+  right: 22px;
+  bottom: 22px;
+  z-index: 30;
+  width: 292px;
+  padding: 13px 14px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  border-radius: var(--radius-sm);
+  cursor: grab;
+  background: linear-gradient(
+    150deg,
+    rgba(255, 255, 255, 0.95),
+    rgba(238, 233, 255, 0.9)
+  );
+  border: 1px solid rgba(139, 92, 246, 0.5);
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.9) inset,
+    0 18px 40px rgba(5, 2, 16, 0.55);
+  animation: sampleIn 0.5s ease both 1.2s;
+  transition:
+    transform 0.18s ease,
+    box-shadow 0.18s ease;
+}
+
+@keyframes sampleIn {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+}
+
+.sample-card:hover {
+  transform: translateY(-3px);
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.9) inset,
+    0 22px 48px rgba(5, 2, 16, 0.6),
+    0 0 0 3px rgba(139, 92, 246, 0.18);
+}
+
+.sample-card.dragging {
+  cursor: grabbing;
+  opacity: 0.55;
+}
+
+.sample-icon {
+  width: 38px;
+  height: 38px;
+  flex: 0 0 auto;
+  display: grid;
+  place-items: center;
+  border-radius: var(--r-sm);
+  color: var(--violet-deep);
+  background: rgba(139, 92, 246, 0.14);
+  border: 1px solid rgba(139, 92, 246, 0.3);
+}
+
+.sample-body {
+  flex: 1;
+  min-width: 0;
+}
+
+.sample-body strong {
+  display: block;
+  color: #1c1233;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.sample-body span {
+  display: block;
+  margin-top: 2px;
+  color: #6b5f96;
+  font-size: 10px;
+}
+
+.sample-actions {
+  display: grid;
+  gap: 6px;
+  justify-items: end;
+}
+
+.sample-hint {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  color: var(--violet-deep);
+  font-size: 9px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.sample-dl {
+  width: 24px;
+  height: 24px;
+  display: grid;
+  place-items: center;
+  border-radius: var(--r-xs);
+  color: var(--violet-deep);
+  background: rgba(139, 92, 246, 0.12);
+  border: 1px solid rgba(139, 92, 246, 0.28);
+  text-decoration: none;
+}
+
+.sample-dl:hover {
+  background: rgba(139, 92, 246, 0.22);
+}
+
+@media (max-width: 1280px) {
+  .sample-card {
+    position: static;
+    width: auto;
+    margin-top: 4px;
+  }
+}
+
+.company-logo-img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  border-radius: 4px;
+}
+
+/* Remote favicons are usually dark marks meant for light backgrounds, so give
+   them a light chip to sit on wherever the surface behind is dark. */
+.recent-logo .company-logo-img,
+.ticker-dot .company-logo-img {
+  padding: 2px;
+  background: #fff;
+  border-radius: 5px;
+}
+
+.company-logo-mono {
+  color: var(--violet-bright);
+  font-weight: 800;
+  letter-spacing: -0.02em;
+}
+
+.face-badge .company-logo-mono {
+  color: #6d28d9;
+}
+
+/* candlestick legend */
+.legend-candle {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.legend-candle i {
+  width: 8px;
+  height: 12px;
+  border-radius: 2px;
+  display: inline-block;
+}
+
+.legend-candle i.up {
+  background: var(--green);
+}
+
+.legend-candle i.down {
+  background: var(--red);
+  margin-left: 8px;
+}
+
+/* ---------- spotlight walkthrough ---------- */
+
+.tour {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+}
+
+/* The hole: a transparent box over the target with an enormous shadow spread,
+   which dims everything except the highlighted element. */
+.tour-hole {
+  position: fixed;
+  border-radius: var(--r-lg);
+  box-shadow:
+    0 0 0 9999px rgba(4, 1, 12, 0.8),
+    0 0 0 2px rgba(196, 181, 253, 0.9),
+    0 0 34px rgba(139, 92, 246, 0.65);
+  transition:
+    top 0.32s cubic-bezier(0.4, 0, 0.2, 1),
+    left 0.32s cubic-bezier(0.4, 0, 0.2, 1),
+    width 0.32s cubic-bezier(0.4, 0, 0.2, 1),
+    height 0.32s cubic-bezier(0.4, 0, 0.2, 1);
+  pointer-events: auto;
+}
+
+.tour-veil-plain {
+  position: fixed;
+  inset: 0;
+  background: rgba(4, 1, 12, 0.8);
+}
+
+.tour-card {
+  position: fixed;
+  width: 320px;
+  padding: 18px 18px 14px;
+  border-radius: var(--r-lg);
+  /* White card, as requested — reads clearly against the dimmed page. */
+  background: linear-gradient(
+    155deg,
+    #ffffff 0%,
+    #f7f4ff 60%,
+    #efe9ff 100%
+  );
+  border: 1px solid rgba(139, 92, 246, 0.5);
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.9) inset,
+    0 24px 60px rgba(3, 1, 10, 0.7);
+  animation: tourCardIn 0.3s cubic-bezier(0.2, 0.9, 0.3, 1.15) both;
+  transition:
+    top 0.32s cubic-bezier(0.4, 0, 0.2, 1),
+    left 0.32s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+@keyframes tourCardIn {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+}
+
+.tour-close {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  width: 24px;
+  height: 24px;
+  display: grid;
+  place-items: center;
+  border: 1px solid rgba(139, 92, 246, 0.26);
+  border-radius: var(--r-xs);
+  background: rgba(139, 92, 246, 0.09);
+  color: #6d28d9;
+  cursor: pointer;
+}
+
+.tour-close:hover {
+  background: rgba(139, 92, 246, 0.2);
+}
+
+.tour-top {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.tour-icon {
+  width: 38px;
+  height: 38px;
+  display: grid;
+  place-items: center;
+  border-radius: var(--r-md);
+  color: #6d28d9;
+  background: rgba(139, 92, 246, 0.14);
+  border: 1px solid rgba(139, 92, 246, 0.3);
+}
+
+.tour-tag {
+  padding: 4px 9px;
+  border-radius: var(--r-xs);
+  background: rgba(139, 92, 246, 0.13);
+  border: 1px solid rgba(139, 92, 246, 0.28);
+  color: #6d28d9;
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+}
+
+.tour-title {
+  margin: 13px 0 0;
+  color: #17102e;
+  font-size: 16px;
+  font-weight: 750;
+  letter-spacing: -0.02em;
+  line-height: 1.3;
+}
+
+.tour-body {
+  margin: 8px 0 0;
+  color: #5f5588;
+  font-size: 12px;
+  line-height: 1.6;
+}
+
+.tour-foot {
+  margin-top: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.tour-dots {
+  display: flex;
+  gap: 5px;
+}
+
+.tour-dot {
+  width: 6px;
+  height: 6px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: rgba(109, 40, 217, 0.22);
+  cursor: pointer;
+  transition:
+    width 0.2s ease,
+    background 0.2s ease;
+}
+
+.tour-dot.on {
+  width: 18px;
+  border-radius: 3px;
+  background: #7c3aed;
+}
+
+.tour-btns {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+
+.tour-back {
+  width: 30px;
+  height: 30px;
+  display: grid;
+  place-items: center;
+  border-radius: var(--r-sm);
+  border: 1px solid rgba(139, 92, 246, 0.3);
+  background: transparent;
+  color: #6d28d9;
+  cursor: pointer;
+}
+
+.tour-back:hover {
+  background: rgba(139, 92, 246, 0.1);
+}
+
+.tour-next {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 14px;
+  border: 0;
+  border-radius: var(--r-sm);
+  background: linear-gradient(135deg, #a78bfa, #7c3aed);
+  color: #fff;
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: 0 6px 16px rgba(124, 58, 237, 0.4);
+}
+
+
+@media (prefers-reduced-motion: reduce) {
+  .tour-hole,
+  .tour-card {
+    transition: none;
+    animation: none;
+  }
+}
+
+/* ---------- chart tooltip ---------- */
+
+.tip {
+  padding: 9px 11px;
+  border-radius: var(--r-sm);
+  background: rgba(12, 6, 32, 0.95);
+  border: 1px solid var(--glass-border);
+  box-shadow: 0 14px 32px rgba(0, 0, 0, 0.45);
+  font-size: 10px;
+}
+
+.tip-label {
+  margin-bottom: 5px;
+  color: var(--subtle);
+  font-size: 9px;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.tip-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  color: var(--muted);
+}
+
+.tip-row strong {
+  color: var(--text);
+}
+
+/* ---------- responsive ---------- */
+
+@media (max-width: 1500px) {
+  .app-shell {
+    grid-template-columns: 214px minmax(0, 1fr) 296px;
+  }
+}
+
+@media (max-width: 1280px) {
+  .app-shell {
+    grid-template-columns: 214px minmax(0, 1fr);
+  }
+
+  .rail {
+    grid-column: 1 / -1;
+    position: static;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    display: grid;
+  }
+
+  .metrics {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 900px) {
+  .app-shell {
+    grid-template-columns: 1fr;
+  }
+
+  .sidebar {
+    position: static;
+    height: auto;
+  }
+
+  .hero-grid,
+  .bottom-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ============================================================
+   Pages: Calls, Watchlist, Calendar, Insights, Trends, Alerts,
+   Compare. All driven by stored calls.
+   ============================================================ */
+
+.page-head {
+  margin-bottom: 16px;
+}
+
+.page-head h2 {
+  font-size: 20px;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  margin: 0 0 3px;
+}
+
+.page-head p {
+  margin: 0;
+  font-size: 12px;
+  color: var(--subtle);
+}
+
+.page-empty {
+  padding: 54px 30px;
+  text-align: center;
+  color: var(--subtle);
+}
+
+.page-empty svg {
+  color: #a78bfa;
+  opacity: 0.75;
+}
+
+.page-empty h3 {
+  margin: 12px 0 5px;
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.page-empty p {
+  margin: 0 auto;
+  max-width: 380px;
+  font-size: 12.5px;
+  line-height: 1.6;
+}
+
+/* ---------- tables ---------- */
+
+.call-table {
+  padding: 6px 4px;
+  overflow: hidden;
+}
+
+.call-table + .call-table,
+.page-empty + .call-table,
+.metrics + .call-table {
+  margin-top: 16px;
+}
+
+.call-table table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.call-table th {
+  text-align: left;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  color: var(--subtle);
+  padding: 12px 14px;
+}
+
+.call-table td {
+  padding: 11px 14px;
+  font-size: 12.5px;
+  color: var(--text-dim);
+  border-top: 1px solid rgba(167, 139, 250, 0.09);
+  vertical-align: middle;
+}
+
+.call-table tbody tr:hover td {
+  background: rgba(167, 139, 250, 0.05);
+}
+
+.cell-company {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.cell-company strong {
+  display: block;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.cell-company span {
+  font-size: 10.5px;
+  color: var(--subtle);
+}
+
+.cell-actions {
+  text-align: right;
+  white-space: nowrap;
+}
+
+.row-open {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 5px 11px;
+  border-radius: var(--r-full);
+  border: 1px solid rgba(167, 139, 250, 0.28);
+  background: rgba(167, 139, 250, 0.1);
+  color: #c9b8ff;
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.row-open:hover {
+  background: rgba(167, 139, 250, 0.2);
+}
+
+.row-del {
+  margin-left: 7px;
+  padding: 5px 7px;
+  border-radius: var(--r-xs);
+  border: 1px solid transparent;
+  background: transparent;
+  color: #6f6790;
+  cursor: pointer;
+  transition: color 0.15s ease, background 0.15s ease;
+}
+
+.row-del:hover {
+  color: #f87171;
+  background: rgba(248, 113, 113, 0.11);
+}
+
+.src-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 8px;
+  border-radius: var(--r-full);
+  font-size: 10px;
+  font-weight: 600;
+  background: rgba(167, 139, 250, 0.12);
+  color: #c9b8ff;
+}
+
+.src-chip.media {
+  background: rgba(52, 211, 153, 0.13);
+  color: #6ee7b7;
+}
+
+/* ---------- watchlist tiles ---------- */
+
+.tile-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(168px, 1fr));
+  gap: 12px;
+}
+
+.tile {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
+  padding: 16px;
+  text-align: left;
+  cursor: pointer;
+  border: none;
+  font: inherit;
+  color: inherit;
+  transition: transform 0.15s ease;
+}
+
+.tile:hover {
+  transform: translateY(-2px);
+}
+
+.tile strong {
+  margin-top: 8px;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.tile-ticker {
+  font-size: 11px;
+  font-weight: 600;
+  color: #a78bfa;
+}
+
+.tile-meta {
+  font-size: 10.5px;
+  color: var(--subtle);
+}
+
+/* ---------- calendar ---------- */
+
+.month-block {
+  padding: 6px;
+  margin-bottom: 12px;
+}
+
+.month-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 14px 10px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--subtle);
+}
+
+.month-head svg {
+  color: #a78bfa;
+}
+
+.month-head span {
+  margin-left: auto;
+  padding: 2px 8px;
+  border-radius: var(--r-full);
+  background: rgba(167, 139, 250, 0.13);
+  color: #c9b8ff;
+  letter-spacing: 0;
+}
+
+.month-row {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  width: 100%;
+  padding: 10px 14px;
+  border: none;
+  border-top: 1px solid rgba(167, 139, 250, 0.09);
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.month-row:hover {
+  background: rgba(167, 139, 250, 0.05);
+}
+
+.month-day {
+  width: 26px;
+  font-size: 15px;
+  font-weight: 600;
+  color: #a78bfa;
+}
+
+.month-row strong {
+  display: block;
+  font-size: 12.5px;
+  font-weight: 600;
+}
+
+.month-row span:not(.month-day):not(.recent-logo) {
+  font-size: 10.5px;
+  color: var(--subtle);
+}
+
+.month-row > svg {
+  margin-left: auto;
+  color: #6f6790;
+}
+
+/* ---------- alerts ---------- */
+
+.alert-list {
+  padding: 6px;
+}
+
+.alert-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 11px;
+  padding: 13px 14px;
+  border-top: 1px solid rgba(167, 139, 250, 0.09);
+}
+
+.alert-row:first-child {
+  border-top: none;
+}
+
+.alert-icon {
+  display: grid;
+  place-items: center;
+  width: 26px;
+  height: 26px;
+  flex: none;
+  border-radius: var(--r-xs);
+  background: rgba(248, 113, 113, 0.14);
+  color: #f87171;
+}
+
+.alert-row strong {
+  display: block;
+  font-size: 12.5px;
+  font-weight: 600;
+  line-height: 1.45;
+}
+
+.alert-row span:not(.alert-icon) {
+  font-size: 10.5px;
+  color: var(--subtle);
+}
+
+/* ---------- compare ---------- */
+
+.compare {
+  padding: 16px;
+}
+
+.compare-pickers {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-bottom: 14px;
+}
+
+.compare-pickers select {
+  width: 100%;
+  padding: 9px 11px;
+  border-radius: var(--r-sm);
+  border: 1px solid rgba(167, 139, 250, 0.22);
+  background: rgba(20, 12, 46, 0.85);
+  color: var(--text);
+  font: inherit;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.compare-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.compare-table th {
+  width: 150px;
+  text-align: left;
+  padding: 11px 0;
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--subtle);
+  border-top: 1px solid rgba(167, 139, 250, 0.09);
+}
+
+.compare-table td {
+  padding: 11px 12px;
+  font-size: 12.5px;
+  font-weight: 500;
+  border-top: 1px solid rgba(167, 139, 250, 0.09);
+}
+
+.compare-actions {
+  display: flex;
+  gap: 9px;
+  margin-top: 16px;
+}
+
+/* ---------- chart panels on pages ---------- */
+
+.chart-panel {
+  padding: 16px;
+}
+
+.chart-empty {
+  display: grid;
+  place-items: center;
+  gap: 10px;
+  min-height: 200px;
+  padding: 30px;
+  text-align: center;
+  color: var(--subtle);
+}
+
+.chart-empty svg {
+  color: #a78bfa;
+  opacity: 0.8;
+}
+
+.chart-empty p {
+  margin: 0;
+  max-width: 330px;
+  font-size: 12.5px;
+  line-height: 1.6;
+}
+
+.tip-note {
+  margin-top: 6px;
+  padding-top: 6px;
+  border-top: 1px solid rgba(167, 139, 250, 0.16);
+  font-size: 10.5px;
+  color: var(--subtle);
+}
+
+/* Recent-calls rail rows become clickable once real calls exist. */
+.recent-item.clickable {
+  cursor: pointer;
+  border-radius: var(--r-sm);
+}
+
+.recent-item.clickable:hover {
+  background: rgba(167, 139, 250, 0.07);
+}
+
+button.view-all,
+button.browse-all {
+  border: none;
+  font-family: inherit;
+  background: transparent;
+  cursor: pointer;
+}
+
+button.browse-all {
+  display: block;
+  width: 100%;
+  border-top: 1px solid var(--glass-border-soft);
+}
+
+button.browse-all:hover,
+button.view-all:hover {
+  color: var(--violet-bright);
+}
+
+.guide-steps {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-top: 10px;
+}
+
+.guide-step {
+  flex: 1;
+  height: 4px;
+  border-radius: var(--r-full);
+  background: rgba(167, 139, 250, 0.16);
+}
+
+.guide-step.on {
+  background: var(--violet-bright, #a78bfa);
+  box-shadow: 0 0 10px rgba(167, 139, 250, 0.55);
+}
+
+.guide-steps em {
+  flex: none;
+  margin-left: 4px;
+  font-style: normal;
+  font-size: 9.5px;
+  font-weight: 600;
+  color: var(--subtle);
+}
+
+/* The spotlight glides between steps instead of snapping. The class is only
+   applied while a step change is in flight — during a scroll the hole has to
+   track its target frame for frame. */
+.tour-hole.gliding,
+.tour-card.gliding {
+  transition:
+    top 0.44s cubic-bezier(0.32, 0.72, 0, 1),
+    left 0.44s cubic-bezier(0.32, 0.72, 0, 1),
+    width 0.44s cubic-bezier(0.32, 0.72, 0, 1),
+    height 0.44s cubic-bezier(0.32, 0.72, 0, 1);
+}
+
+.tour-copy {
+  animation: tourCopyIn 0.34s ease both;
+}
+
+@keyframes tourCopyIn {
+  from {
+    opacity: 0;
+    transform: translateY(5px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tour-hole.gliding,
+  .tour-card.gliding,
+  .tour-copy {
+    transition: none;
+    animation: none;
+  }
+}
+
+/* ---------- company search ---------- */
+
+.search-wrap {
+  position: relative;
+  flex: 1;
+  min-width: 0;
+}
+
+.search input:disabled {
+  opacity: 0.5;
+  cursor: wait;
+}
+
+.spin-icon {
+  animation: spin 0.9s linear infinite;
+}
+
+.search-panel {
+  position: absolute;
+  top: calc(100% + 8px);
+  left: 0;
+  right: 0;
+  z-index: 60;
+  padding: 6px;
+  border-radius: var(--r-md);
+  box-shadow: 0 22px 60px rgba(10, 4, 28, 0.6);
+  animation: searchIn 0.16s ease both;
+}
+
+@keyframes searchIn {
+  from {
+    opacity: 0;
+    transform: translateY(-5px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.search-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 9px 10px;
+  border: none;
+  border-radius: var(--r-sm);
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.search-row:hover {
+  background: rgba(167, 139, 250, 0.1);
+}
+
+.search-name {
+  min-width: 0;
+  flex: 1;
+}
+
+.search-name strong {
+  display: block;
+  font-size: 12.5px;
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.search-name span {
+  font-size: 10.5px;
+  color: var(--subtle);
+}
+
+.search-row > svg {
+  color: #6f6790;
+  flex: none;
+}
+
+.search-note {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 13px 12px;
+  font-size: 11.5px;
+  line-height: 1.5;
+  color: var(--subtle);
+}
+
+.search-note svg {
+  flex: none;
+  color: #a78bfa;
+}
+
+.search-foot {
+  padding: 8px 12px 6px;
+  border-top: 1px solid rgba(167, 139, 250, 0.1);
+  font-size: 10px;
+  color: var(--subtle);
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.src-chip.fetched {
+  background: rgba(96, 165, 250, 0.14);
+  color: #93c5fd;
+}
+
+/* ---------- chat panel ---------- */
+
+/* The thread keeps its height whether it holds four suggestions or two
+   messages. Without this the whole right rail jumps the moment you ask
+   something, which reads as the panel breaking. */
+.assistant-body {
+  min-height: 330px;
+  max-height: 380px;
+  overflow-y: auto;
+  align-content: start;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(167, 139, 250, 0.3) transparent;
+}
+
+.assistant-body::-webkit-scrollbar {
+  width: 6px;
+}
+
+.assistant-body::-webkit-scrollbar-thumb {
+  border-radius: var(--r-full);
+  background: rgba(167, 139, 250, 0.28);
+}
+
+/* Three dots pulsing in sequence — the familiar "still thinking" signal, and
+   honest here because the model really is working for a few seconds. */
+.msg-thinking {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+}
+
+.think-dots {
+  display: inline-flex;
+  gap: 4px;
+}
+
+.think-dots i {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--violet-bright, #a78bfa);
+  animation: thinkPulse 1.25s ease-in-out infinite;
+}
+
+.think-dots i:nth-child(2) {
+  animation-delay: 0.18s;
+}
+
+.think-dots i:nth-child(3) {
+  animation-delay: 0.36s;
+}
+
+@keyframes thinkPulse {
+  0%,
+  70%,
+  100% {
+    opacity: 0.28;
+    transform: translateY(0) scale(0.85);
+  }
+  35% {
+    opacity: 1;
+    transform: translateY(-2px) scale(1);
+  }
+}
+
+.think-label {
+  font-size: 11px;
+  color: var(--subtle);
+}
+
+/* Answers are longer now, so give them room to breathe. */
+.msg-bot p {
+  white-space: pre-wrap;
+}
+
+.msg-bot {
+  font-size: 11.5px;
+  line-height: 1.6;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .think-dots i {
+    animation: none;
+    opacity: 0.7;
+  }
+}
+
+/* ---------- compare ---------- */
+
+.compare-head {
+  padding: 10px 12px 12px !important;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.compare-head .recent-logo {
+  display: inline-grid;
+  vertical-align: middle;
+  margin-right: 7px;
+}
+
+.compare-table td {
+  vertical-align: middle;
+}
+
+.delta {
+  margin-left: 8px;
+  padding: 2px 7px;
+  border-radius: var(--r-full);
+  font-size: 10px;
+  font-weight: 700;
+}
+
+.delta.up {
+  background: rgba(52, 211, 153, 0.14);
+  color: #6ee7b7;
+}
+
+.delta.down {
+  background: rgba(248, 113, 113, 0.14);
+  color: #fca5a5;
+}
+
+.delta.flat {
+  background: rgba(167, 139, 250, 0.12);
+  color: var(--subtle);
+}
+
+/* Guidance direction carries meaning, so it should not read as plain text. */
+.guide-Raised {
+  color: #6ee7b7;
+  font-weight: 700;
+}
+
+.guide-Lowered {
+  color: #fca5a5;
+  font-weight: 700;
+}
+
+.guide-Maintained {
+  color: #c9b8ff;
+  font-weight: 700;
+}
+
+.compare-story {
+  margin-top: 16px;
+  padding: 13px 14px;
+  border-radius: var(--r-md);
+  border: 1px solid rgba(167, 139, 250, 0.18);
+  background: rgba(167, 139, 250, 0.07);
+}
+
+.compare-story strong {
+  display: block;
+  margin-bottom: 5px;
+  font-size: 11px;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: #c9b8ff;
+}
+
+.compare-story p {
+  margin: 0;
+  font-size: 12.5px;
+  line-height: 1.6;
+  color: var(--text-dim);
+}
+
+.compare-story em {
+  font-style: normal;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.compare-lists {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+  margin-top: 16px;
+}
+
+.compare-lists h4 {
+  margin: 0 0 7px;
+  font-size: 11px;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--subtle);
+}
+
+.compare-lists ul {
+  margin: 0;
+  padding-left: 16px;
+}
+
+.compare-lists li {
+  font-size: 12px;
+  line-height: 1.6;
+  color: var(--text-dim);
+}
+
+.compare-none {
+  margin: 0;
+  font-size: 12px;
+  color: var(--subtle);
+}
+
+/* ---------- page transitions and press feedback ---------- */
+
+/* Short and slight. A page switch should feel like the content was already
+   there, not like a slideshow — anything over ~150ms reads as waiting. */
+.page {
+  animation: pageIn 0.15s cubic-bezier(0.32, 0.72, 0, 1) both;
+}
+
+@keyframes pageIn {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* Buttons should push back. The scale is small, the release is slower than the
+   press, which is what makes a control feel weighted rather than springy. */
+button,
+.nav-item,
+.tile,
+.month-row,
+.recent-item.clickable,
+.search-row,
+.suggest {
+  transition:
+    transform 0.18s cubic-bezier(0.32, 0.72, 0, 1),
+    background 0.18s ease,
+    border-color 0.18s ease,
+    box-shadow 0.18s ease;
+}
+
+button:active,
+.nav-item:active,
+.tile:active,
+.month-row:active,
+.recent-item.clickable:active,
+.search-row:active,
+.suggest:active {
+  transform: scale(0.975);
+  transition-duration: 0.06s;
+}
+
+/* The big ones move less, or they look rubbery. */
+.upload-card:active,
+.glass.tile:active {
+  transform: scale(0.99);
+}
+
+.btn-primary:active,
+.send-btn:active,
+.tour-next:active,
+.row-open:active {
+  transform: scale(0.955) translateY(1px);
+  filter: brightness(0.94);
+}
+
+button:disabled:active {
+  transform: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .page {
+    animation: none;
+  }
+
+  button:active,
+  .nav-item:active,
+  .tile:active,
+  .month-row:active,
+  .recent-item.clickable:active,
+  .search-row:active,
+  .suggest:active {
+    transform: none;
+  }
+}
+
+/* Alert rows are clickable now — they open the call the risk came from. */
+button.alert-row {
+  width: 100%;
+  border: none;
+  border-top: 1px solid rgba(167, 139, 250, 0.09);
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+button.alert-row:first-child {
+  border-top: none;
+}
+
+button.alert-row:hover {
+  background: rgba(167, 139, 250, 0.05);
+}
+
+button.alert-row > .recent-logo {
+  margin-left: auto;
+}
+
+/* ---------- breathing room ---------- */
+
+/* The panels were butting up against each other and against their own
+   contents. Everything below widens the gaps and the internal padding so the
+   layout reads as composed rather than packed. */
+
+.rail {
+  display: grid;
+  gap: 22px;
+  align-content: start;
+}
+
+.page {
+  display: grid;
+  gap: 22px;
+  align-content: start;
+}
+
+.topbar {
+  gap: 14px;
+  margin-bottom: 2px;
+}
+
+/* Panels */
+.chart-panel,
+.compare,
+.call-table,
+.alert-list,
+.month-block {
+  padding: 20px;
+}
+
+.call-table,
+.alert-list,
+.month-block {
+  padding: 10px 8px;
+}
+
+.call-table th {
+  padding: 14px 16px 12px;
+}
+
+.call-table td {
+  padding: 14px 16px;
+}
+
+.tile-grid {
+  gap: 18px;
+}
+
+.tile {
+  padding: 20px 18px;
+}
+
+.page-head {
+  margin-bottom: 4px;
+}
+
+.panel-head {
+  margin-bottom: 14px;
+}
+
+.compare-pickers {
+  gap: 14px;
+  margin-bottom: 18px;
+}
+
+.compare-table th,
+.compare-table td {
+  padding: 14px 14px;
+}
+
+.compare-lists {
+  gap: 20px;
+  margin-top: 20px;
+}
+
+.compare-actions {
+  margin-top: 20px;
+  gap: 12px;
+}
+
+.assistant-body {
+  padding: 16px 16px 12px;
+  gap: 11px;
+}
+
+.recent-list {
+  padding: 4px 12px 10px;
+  gap: 4px;
+}
+
+.recent-item {
+  padding: 9px 8px;
+}
+
+.month-row {
+  padding: 12px 16px;
+}
+
+.alert-row {
+  padding: 15px 16px;
+}
+
+.search-panel {
+  padding: 8px;
+}
+
+/* The block cursor that trails the text while an answer is being revealed. */
+.caret {
+  display: inline-block;
+  width: 2px;
+  height: 0.95em;
+  margin-left: 1px;
+  vertical-align: text-bottom;
+  background: var(--violet-bright, #a78bfa);
+  animation: caretBlink 1s steps(1) infinite;
+}
+
+@keyframes caretBlink {
+  0%,
+  49% {
+    opacity: 1;
+  }
+  50%,
+  100% {
+    opacity: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .caret {
+    display: none;
+  }
+}
+
+/* The bell carries a live count, so it needs somewhere to put it. */
+.icon-btn {
+  position: relative;
+  border: 1px solid var(--glass-border-soft);
+  background: rgba(167, 139, 250, 0.06);
+  cursor: pointer;
+}
+
+.icon-btn:hover {
+  background: rgba(167, 139, 250, 0.13);
+}
+
+.icon-badge {
+  position: absolute;
+  top: -5px;
+  right: -5px;
+  min-width: 17px;
+  height: 17px;
+  padding: 0 4px;
+  display: grid;
+  place-items: center;
+  border-radius: var(--r-full);
+  background: #f87171;
+  color: #2a0a0a;
+  font-size: 9.5px;
+  font-weight: 800;
+  box-shadow: 0 0 0 2px rgba(12, 6, 30, 0.9);
+}
+
+/* ---------- saved comparisons ---------- */
+
+.saved-strip {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 9px;
+}
+
+.saved-chip {
+  display: inline-flex;
+  align-items: center;
+  border-radius: var(--r-full);
+  border: 1px solid var(--glass-border-soft);
+  background: rgba(167, 139, 250, 0.08);
+  overflow: hidden;
+}
+
+.saved-chip.on {
+  border-color: rgba(167, 139, 250, 0.45);
+  background: rgba(167, 139, 250, 0.18);
+}
+
+.saved-chip > button:first-child {
+  padding: 7px 4px 7px 13px;
+  border: none;
+  background: transparent;
+  color: var(--text-dim);
+  font: inherit;
+  font-size: 11.5px;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.saved-chip.on > button:first-child {
+  color: var(--text);
+}
+
+.saved-drop {
+  padding: 7px 11px 7px 6px;
+  border: none;
+  background: transparent;
+  color: #6f6790;
+  cursor: pointer;
+  display: inline-grid;
+  place-items: center;
+}
+
+.saved-drop:hover {
+  color: #f87171;
+}
+
+.compare-actions .btn-primary {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+}
+
+.compare-actions .btn-primary:disabled {
+  opacity: 0.65;
+  cursor: default;
+}
+
+/* =========================================================
+   REFINEMENT LAYER
+   ---------------------------------------------------------
+   The base sheet applied one loud treatment to every surface: a violet
+   gradient, a heavy blur, and a glow, on all of it. That uniformity is what
+   makes an interface read as generated rather than designed — when every panel
+   shouts equally, nothing is emphasised and the decoration carries no meaning.
+
+   This layer does three things:
+
+     1. Demotes most panels to a calm, near-solid surface. The full glass
+        treatment is kept for the hero card and the upload target, so glass
+        means "this is the thing to look at" instead of "this is a div".
+     2. Builds a real type scale. Hierarchy now comes from size, weight and
+        letter-spacing rather than from colour and glow.
+     3. Aligns every figure on tabular numerals, because a column of numbers
+        that does not line up is the fastest way to look amateur in a product
+        about financial data.
+   ========================================================= */
+
+:root {
+  /* Radii vary by element size. One radius for everything, large or small,
+     is another uniformity tell. */
+  --radius: var(--r-lg);
+  --radius-sm: var(--r-md);
+  --radius-xs: var(--r-xs);
+
+  /* A neutral panel surface, tinted only very slightly toward the brand. */
+  --surface: rgba(19, 12, 38, 0.72);
+  --surface-line: rgba(150, 132, 200, 0.14);
+  --surface-line-soft: rgba(150, 132, 200, 0.08);
+}
+
+/* ---------- surfaces ---------- */
+
+/* The default panel: quiet. One flat fill, one hairline border, one soft
+   shadow for depth. No gradient, no glow, no blur. */
+.glass {
+  background: var(--surface);
+  border: 1px solid var(--surface-line);
+  border-radius: var(--radius);
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+  box-shadow: 0 1px 2px rgba(4, 2, 12, 0.4);
+}
+
+.glass::before {
+  display: none;
+}
+
+/* The showcase surfaces keep the full treatment — this is where the design
+   language earns its keep, and where the eye should land first. */
+.featured.glass,
+.upload-card.glass,
+.sidebar.glass {
+  background:
+    linear-gradient(
+      158deg,
+      rgba(167, 139, 250, 0.12) 0%,
+      rgba(139, 92, 246, 0.045) 38%,
+      rgba(255, 255, 255, 0.02) 100%
+    ),
+    rgba(23, 14, 46, 0.6);
+  border-color: rgba(167, 139, 250, 0.18);
+  backdrop-filter: blur(24px) saturate(135%);
+  -webkit-backdrop-filter: blur(24px) saturate(135%);
+  box-shadow:
+    0 1px 0 rgba(233, 226, 255, 0.14) inset,
+    0 -1px 0 rgba(10, 4, 26, 0.45) inset,
+    0 18px 44px rgba(5, 2, 16, 0.5);
+}
+
+.featured.glass::before,
+.upload-card.glass::before {
+  display: block;
+}
+
+/* The ambient background was competing with the content. Dimmed by about a
+   third so the panels sit on it rather than in it. */
+.app-bg {
+  background:
+    radial-gradient(700px 480px at 18% 0%, rgba(124, 58, 237, 0.2), transparent 58%),
+    radial-gradient(620px 420px at 82% 4%, rgba(167, 139, 250, 0.11), transparent 60%),
+    radial-gradient(860px 580px at 52% 108%, rgba(91, 33, 182, 0.15), transparent 62%),
+    var(--bg-deep);
+}
+
+/* ---------- type scale ---------- */
+
+/* Panel titles: small, tight, quietly confident. They label content; they are
+   not content themselves. */
+.panel-title,
+.page-head h2 {
+  letter-spacing: -0.015em;
+}
+
+.panel-title {
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.panel-sub {
+  font-size: 11.5px;
+  font-weight: 400;
+  color: var(--subtle);
+  letter-spacing: 0;
+}
+
+.page-head h2 {
+  font-size: 22px;
+  font-weight: 600;
+}
+
+/* Metric labels are the smallest thing on screen and carry the least weight —
+   the number is what matters. */
+.metric-head {
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  color: var(--subtle);
+}
+
+/* Display figures: large, tight tracking, and never allowed to shift width as
+   they change. */
+.metric-value {
+  font-size: 30px;
+  font-weight: 600;
+  letter-spacing: -0.03em;
+  line-height: 1.05;
+}
+
+/* ---------- numbers ---------- */
+
+/* Every figure in the product lines up in its column. This is the single
+   highest-signal detail in a financial interface: proportional digits make a
+   table of numbers look approximate, tabular ones make it look measured. */
+.metric-value,
+.tip strong,
+.tip-row strong,
+.pill,
+.delta,
+.compare-table td,
+.call-table td,
+.month-day,
+.tile-meta,
+.change-box strong,
+.metric-sub,
+.msg-cites,
+.recharts-cartesian-axis-tick-value {
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum" 1, "lnum" 1;
+}
+
+/* ---------- restraint on colour ---------- */
+
+/* Violet now signals "you can interact with this" rather than decorating
+   everything. Static panels do not glow. */
+.metric,
+.chart-panel,
+.call-table,
+.alert-list,
+.month-block,
+.tile,
+.page-empty {
+  box-shadow: 0 1px 2px rgba(4, 2, 12, 0.4);
+}
+
+.tile:hover,
+.recent-item.clickable:hover {
+  border-color: rgba(167, 139, 250, 0.3);
+}
+
+/* The active nav item is the one place a solid violet fill is warranted. */
+.nav-item.active {
+  box-shadow: none;
+}
+
+/* ---------- charts ---------- */
+
+/* Thinner axes and fainter gridlines. The data should be the darkest ink on
+   the panel, not the scaffolding around it. */
+.recharts-cartesian-axis-tick-value {
+  font-size: 10px;
+  fill: #8a82ab;
+}
+
+.recharts-cartesian-grid line {
+  stroke: rgba(150, 132, 200, 0.09);
+}
+
+/* ---------- tables ---------- */
+
+.call-table th,
+.compare-table th {
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--subtle);
+}
+
+.call-table tbody tr:hover td {
+  background: rgba(150, 132, 200, 0.05);
+}
+
+.call-table td,
+.compare-table td,
+.compare-table th {
+  border-top-color: var(--surface-line-soft);
+}
+
+/* Numeric columns right-align, which is how a column of figures is meant to be
+   read — the decimal points stack. */
+.compare-table td {
+  font-variant-numeric: tabular-nums;
+}
+
+/* ---------- controls ---------- */
+
+.chip,
+.src-chip,
+.saved-chip,
+.badge {
+  border-radius: var(--radius-xs);
+}
+
+.saved-chip {
+  border-radius: var(--r-full);
+}
+
+.btn-ghost,
+.row-open,
+.compare-pickers select {
+  border-radius: var(--radius-sm);
+}
+
+/* ---------- figures ---------- */
+
+/* Outfit is a good interface face but its digits are proportional, so a column
+   of them never quite lines up. Financial products solve this with a second
+   face used only for numbers — the Bloomberg terminal has done it for decades.
+   IBM Plex Mono carries the figures; Outfit keeps everything else.
+   Restricted to `unicode-range` at the point of use, so labels stay in Outfit
+   and only the digits switch. */
+.metric-value,
+.change-box strong,
+.delta,
+.month-day,
+.tip-row strong,
+.num {
+  font-family: "IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-feature-settings: "tnum" 1;
+}
+
+/* The mono face runs small and wide next to Outfit, so it needs correcting
+   back to the same optical size. */
+.metric-value {
+  font-size: 27px;
+  letter-spacing: -0.035em;
+}
+
+.num {
+  font-size: 12px;
+  letter-spacing: -0.01em;
+}
+
+.delta,
+.change-box strong,
+.tip-row strong {
+  letter-spacing: -0.02em;
+}
+
+.month-day {
+  font-size: 14px;
+  font-weight: 600;
+}
+
+/* A figure sitting inside a sentence still wants the mono, without inheriting
+   the smaller size. */
+.num-inline {
+  font-family: "IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-feature-settings: "tnum" 1;
+  letter-spacing: -0.02em;
+}
+
+/* ---------- brand lockup ---------- */
+
+.brand-text {
+  display: grid;
+  gap: 1px;
+  min-width: 0;
+}
+
+.brand-name {
+  font-size: 16.5px;
+  font-weight: 700;
+  letter-spacing: -0.025em;
+  line-height: 1.1;
+}
+
+/* The byline sits quietly under the name — present, not competing. */
+.brand-by {
+  font-size: 9.5px;
+  font-weight: 500;
+  letter-spacing: 0.02em;
+  color: var(--subtle);
+  white-space: nowrap;
+}
+
+.sidebar-foot {
+  display: grid;
+  gap: 2px;
+}
+
+/* =========================================================
+   INSIDE THE CALL
+   The transcript split along the running order every earnings call follows.
+   ========================================================= */
+
+.breakdown {
+  padding: 20px;
+}
+
+.bd-speakers {
+  padding: 5px 11px;
+  border-radius: var(--r-full);
+  border: 1px solid var(--surface-line);
+  font-size: 10.5px;
+  font-weight: 600;
+  color: var(--subtle);
+  cursor: help;
+}
+
+.bd-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid var(--surface-line-soft);
+}
+
+.bd-tab {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 8px 13px;
+  border-radius: var(--radius-sm);
+  border: 1px solid transparent;
+  background: transparent;
+  color: var(--subtle);
+  font: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.bd-tab:hover {
+  color: var(--text-dim);
+  background: rgba(150, 132, 200, 0.06);
+}
+
+.bd-tab.on {
+  color: var(--text);
+  background: rgba(167, 139, 250, 0.14);
+  border-color: rgba(167, 139, 250, 0.28);
+}
+
+.bd-count {
+  padding: 1px 6px;
+  border-radius: var(--r-full);
+  background: rgba(150, 132, 200, 0.16);
+  font-size: 9.5px;
+  font-weight: 600;
+}
+
+.bd-tab.on .bd-count {
+  background: rgba(167, 139, 250, 0.3);
+  color: #ede9fe;
+}
+
+.bd-body {
+  padding-top: 18px;
+  animation: pageIn 0.15s cubic-bezier(0.32, 0.72, 0, 1) both;
+}
+
+.bd-h {
+  margin: 0 0 8px;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  color: var(--subtle);
+}
+
+.bd-h:not(:first-child) {
+  margin-top: 22px;
+}
+
+.bd-p {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.65;
+  color: var(--text-dim);
+}
+
+.bd-lead {
+  margin-bottom: 16px;
+  color: var(--subtle);
+  font-size: 12px;
+}
+
+.bd-empty {
+  margin: 0;
+  font-size: 12px;
+  line-height: 1.6;
+  color: var(--subtle);
+}
+
+.bd-p + .bd-empty,
+.bd-figures + .bd-empty {
+  margin-top: 16px;
+}
+
+.bd-note {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 18px;
+  padding: 10px 12px;
+  border-radius: var(--radius-sm);
+  background: rgba(150, 132, 200, 0.07);
+  border: 1px solid var(--surface-line-soft);
+  font-size: 11.5px;
+  color: var(--subtle);
+}
+
+.bd-note svg {
+  flex: none;
+  color: #c4b5fd;
+}
+
+.bd-list {
+  margin: 0;
+  padding-left: 17px;
+}
+
+.bd-list li {
+  font-size: 12.5px;
+  line-height: 1.75;
+  color: var(--text-dim);
+}
+
+.bd-list.warn li::marker {
+  color: #f87171;
+}
+
+/* ---------- figures ---------- */
+
+/* A plain grid of stated numbers. No sparklines, no deltas invented from
+   nothing — just what was said, laid out so it can be scanned. */
+.bd-figures {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 1px;
+  background: var(--surface-line-soft);
+  border: 1px solid var(--surface-line-soft);
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+}
+
+.bd-figure {
+  display: grid;
+  gap: 5px;
+  padding: 14px 16px;
+  background: rgba(19, 12, 38, 0.9);
+}
+
+.bd-figure-label {
+  font-size: 9.5px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--subtle);
+}
+
+.bd-figure strong {
+  font-size: 17px;
+  font-weight: 600;
+  letter-spacing: -0.025em;
+  color: var(--text);
+}
+
+/* ---------- people ---------- */
+
+.bd-people {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.bd-person {
+  display: grid;
+  gap: 1px;
+  padding: 9px 13px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--surface-line-soft);
+  background: rgba(150, 132, 200, 0.05);
+}
+
+.bd-person strong {
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.bd-person em {
+  font-style: normal;
+  font-size: 10.5px;
+  color: var(--subtle);
+}
+
+/* ---------- Q&A ---------- */
+
+.bd-qa {
+  display: grid;
+  gap: 8px;
+}
+
+.bd-exchange {
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--surface-line-soft);
+  background: rgba(150, 132, 200, 0.04);
+  overflow: hidden;
+}
+
+.bd-exchange summary {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 14px;
+  cursor: pointer;
+  list-style: none;
+}
+
+.bd-exchange summary::-webkit-details-marker {
+  display: none;
+}
+
+.bd-exchange[open] summary {
+  border-bottom: 1px solid var(--surface-line-soft);
+}
+
+.bd-analyst {
+  display: flex;
+  align-items: baseline;
+  gap: 7px;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.bd-analyst em {
+  font-style: normal;
+  font-size: 10.5px;
+  font-weight: 400;
+  color: var(--subtle);
+}
+
+/* Whether the answer addressed the question is the whole point of reading the
+   Q&A, so it is the one thing colour-coded here. */
+.bd-directness {
+  margin-left: auto;
+  padding: 3px 9px;
+  border-radius: var(--r-full);
+  font-size: 9.5px;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  background: rgba(150, 132, 200, 0.14);
+  color: var(--subtle);
+}
+
+.bd-directness.direct {
+  background: rgba(52, 211, 153, 0.13);
+  color: #6ee7b7;
+}
+
+.bd-directness.partial {
+  background: rgba(251, 191, 36, 0.13);
+  color: #fcd34d;
+}
+
+.bd-directness.deflected {
+  background: rgba(248, 113, 113, 0.13);
+  color: #fca5a5;
+}
+
+.bd-caret {
+  color: #6f6790;
+  transition: transform 0.18s ease;
+}
+
+.bd-exchange[open] .bd-caret {
+  transform: rotate(180deg);
+}
+
+.bd-q,
+.bd-a {
+  margin: 0;
+  padding: 13px 14px;
+  font-size: 12.5px;
+  line-height: 1.7;
+}
+
+.bd-q {
+  color: var(--text);
+  background: rgba(150, 132, 200, 0.04);
+}
+
+.bd-a {
+  color: var(--text-dim);
+  border-top: 1px solid var(--surface-line-soft);
+}
+
+.bd-a strong {
+  color: #c9b8ff;
+  font-weight: 600;
+}
+
+/* =========================================================
+   CONTRAST FIX
+   ---------------------------------------------------------
+   The refinement layer redefined `.glass` further down this file than
+   `.metric` is defined. Both are single-class selectors, so the later rule won
+   and the metric cards lost their light background — while their text stayed
+   dark, because that text was written for a light surface. Dark on dark.
+
+   The metric row is deliberately the one light surface in the product: it is
+   the first thing read, and inverting it is what makes it read first. Restated
+   here with two classes so specificity settles it rather than source order.
+   ========================================================= */
+
+.metric.glass {
+  background:
+    linear-gradient(
+      158deg,
+      rgba(255, 255, 255, 0.95) 0%,
+      rgba(244, 241, 255, 0.92) 55%,
+      rgba(233, 228, 252, 0.9) 100%
+    );
+  border: 1px solid rgba(139, 92, 246, 0.4);
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.9) inset,
+    0 10px 26px rgba(5, 2, 16, 0.4);
+}
+
+.metric.glass::before {
+  display: none;
+}
+
+/* Everything inside a light card needs dark ink. Stated explicitly rather than
+   inherited, so a future change to the panel default cannot silently make this
+   unreadable again. */
+.metric.glass .metric-head {
+  color: #6b5f96;
+}
+
+.metric.glass .metric-value {
+  color: #170e2b;
+}
+
+.metric.glass .metric-value small,
+.metric.glass .metric-note,
+.metric.glass .metric-sub,
+.metric.glass .risk-list,
+.metric.glass .guide-steps em {
+  color: #6b5f96;
+}
+
+.metric.glass .metric-head svg {
+  color: var(--violet-deep);
+}
+
+.metric.glass .tone-green {
+  color: #0a7f56;
+}
+
+.metric.glass .tone-red {
+  color: #c9344c;
+}
+
+.metric.glass .tone-violet {
+  color: #6d28d9;
+}
+
+.metric.glass .tone-orange {
+  color: #b45309;
+}
+
+/* The small indicators inside the cards were tuned for a dark surface too. */
+.metric.glass .guide-step {
+  background: rgba(109, 40, 217, 0.16);
+}
+
+.metric.glass .guide-step.on {
+  background: #6d28d9;
+  box-shadow: none;
+}
+
+.metric.glass .dots i {
+  background: rgba(109, 40, 217, 0.2);
+}
+
+.metric.glass .dots i.on {
+  background: #b45309;
+}
+
+/* ---------- secondary icon contrast ---------- */
+
+/* These chevrons and close buttons were #6f6790, which lands around 3.3:1
+   against the panel — readable if you already know it is there, easy to miss
+   if you do not. Lifted to the same tone as secondary label text. */
+.row-del,
+.month-row > svg,
+.search-row > svg,
+.saved-drop,
+.bd-caret {
+  color: var(--subtle);
+}
+
+.row-del:hover,
+.saved-drop:hover {
+  color: #f87171;
+}
+
+.month-row:hover > svg,
+.search-row:hover > svg {
+  color: var(--text-dim);
+}
+
+/* A disabled control has to look disabled, or it reads as broken rather than
+   unavailable. */
+.btn-primary:disabled,
+.btn-ghost:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+  filter: grayscale(0.3);
+}
+
+.btn-primary:disabled:active,
+.btn-ghost:disabled:active {
+  transform: none;
+}
+
+/* =========================================================
+   CALM PASS
+   Removing the leftover novelty: glow shadows that exist for their own sake,
+   and hover effects that move the layout. Both are named in the vibe-coded
+   report, and both are decoration rather than feedback.
+   ========================================================= */
+
+/* Glows off. A shadow should suggest the surface sits above the background,
+   not that it is lit from within. */
+.brand-mark {
+  box-shadow: none;
+}
+
+.upload-icon {
+  box-shadow: none;
+}
+
+.metric-chart,
+.demo-dot {
+  box-shadow: none;
+}
+
+/* Hover should acknowledge the pointer, not reflow the page. Lifting a card
+   two pixels shifts everything optically around it; a border and a background
+   step say the same thing without moving anything. */
+.tile:hover {
+  transform: none;
+  background: rgba(150, 132, 200, 0.07);
+  border-color: rgba(167, 139, 250, 0.32);
+}
+
+/* ---------- spacing rhythm ---------- */
+
+/* A 4pt scale, applied to the values that were set by eye during the build.
+   Predictable rhythm is the cheapest signal of care, and the absence of it is
+   the one people feel without being able to name. */
+:root {
+  --s-1: 4px;
+  --s-2: 8px;
+  --s-3: 12px;
+  --s-4: 16px;
+  --s-5: 20px;
+  --s-6: 24px;
+  --s-8: 32px;
+}
+
+.app-shell {
+  gap: var(--s-6);
+  padding: var(--s-6);
+}
+
+.main,
+.rail,
+.page {
+  gap: var(--s-5);
+}
+
+.hero-grid,
+.metrics,
+.bottom-grid {
+  gap: var(--s-4);
+}
+
+.breakdown,
+.chart-panel,
+.compare {
+  padding: var(--s-5);
+}
+
+.metric {
+  padding: var(--s-4);
+}
+
+.call-table th,
+.call-table td,
+.month-row,
+.alert-row {
+  padding: var(--s-3) var(--s-4);
+}
+
+.assistant-body {
+  padding: var(--s-4) var(--s-4) var(--s-3);
+  gap: var(--s-3);
+}
+
+.panel-head {
+  margin-bottom: var(--s-3);
+}
+
+.compare-lists,
+.compare-actions {
+  margin-top: var(--s-5);
+  gap: var(--s-4);
+}
+
+/* ---------- loading skeletons ---------- */
+
+.skeleton {
+  padding: var(--s-2);
+}
+
+.sk-row {
+  display: flex;
+  align-items: center;
+  gap: var(--s-3);
+  padding: var(--s-4);
+  border-top: 1px solid var(--surface-line-soft);
+}
+
+.sk-row:first-child {
+  border-top: none;
+}
+
+.sk-dot,
+.sk-line {
+  /* One sweep of light across the placeholder. Slow enough to read as
+     "working", not so fast it draws the eye away from the rest of the page. */
+  background: linear-gradient(
+    90deg,
+    rgba(150, 132, 200, 0.07) 0%,
+    rgba(150, 132, 200, 0.14) 50%,
+    rgba(150, 132, 200, 0.07) 100%
+  );
+  background-size: 300% 100%;
+  animation: skSweep 1.6s ease-in-out infinite;
+  border-radius: var(--r-xs);
+}
+
+.sk-dot {
+  width: 26px;
+  height: 26px;
+  flex: none;
+  border-radius: var(--r-sm);
+}
+
+.sk-line {
+  height: 10px;
+}
+
+.sk-short {
+  width: 64px;
+  margin-left: auto;
+}
+
+@keyframes skSweep {
+  0% {
+    background-position: 120% 0;
+  }
+  100% {
+    background-position: -20% 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sk-dot,
+  .sk-line {
+    animation: none;
+  }
+}
+
+/* A supplied logo file fills the tile with a little inset, so a mark that runs
+   to the edge of its own canvas still reads as sitting inside the square. */
+.brand-img {
+  width: 100%;
+  height: 100%;
+  padding: 5px;
+  object-fit: contain;
+}
+
+/* =========================================================
+   THEME: QUIET
+   ---------------------------------------------------------
+   A restyle to the approved reference. The difference is not decoration, it is
+   temperature: surfaces go neutral near-black instead of violet-tinted, panels
+   go flat instead of glassy, and violet is spent only on the active nav item,
+   the primary button and the values that need to carry meaning.
+
+   Written as a final layer so the earlier sheet stays readable as the history
+   of how the design got here.
+   ========================================================= */
+
+:root {
+  --bg-deep: #08080b;
+  --bg-base: #0a0a0e;
+
+  /* Panels sit one step above the page, not on a different material. */
+  --surface: #101014;
+  --surface-2: #16161c;
+  --surface-line: #23232c;
+  --surface-line-soft: #1b1b22;
+
+  --text: #f4f4f7;
+  --text-dim: #c8c8d2;
+  --muted: #9a9aa8;
+  --subtle: #71717f;
+
+  --violet: #8b5cf6;
+  --violet-bright: #a78bfa;
+  --violet-deep: #6d28d9;
+  --violet-glow: transparent;
+
+  --green: #3ecf8e;
+  --red: #f87171;
+  --orange: #fbbf24;
+}
+
+body {
+  background: var(--bg-deep);
+}
+
+/* The violet blooms are gone. They were the single loudest thing on screen and
+   they tinted every surface sitting on top of them. */
+.app-bg {
+  background:
+    radial-gradient(900px 600px at 20% -5%, rgba(109, 40, 217, 0.07), transparent 60%),
+    var(--bg-deep);
+}
+
+/* ---------- surfaces ---------- */
+
+.glass,
+.featured.glass,
+.upload-card.glass {
+  background: var(--surface);
+  border: 1px solid var(--surface-line);
+  border-radius: var(--r-lg);
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+  box-shadow: none;
+}
+
+.glass::before,
+.featured.glass::before,
+.upload-card.glass::before {
+  display: none;
+}
+
+/* The sidebar is part of the page, not a card floating on it. */
+.sidebar.glass {
+  background: transparent;
+  border: none;
+  border-right: 1px solid var(--surface-line-soft);
+  border-radius: 0;
+  padding-right: var(--s-4);
+  box-shadow: none;
+}
+
+/* The featured panel keeps a hint of depth, since it is the hero. */
+.featured.glass {
+  background: linear-gradient(160deg, #14121c 0%, #101014 60%);
+  border-color: #26222f;
+}
+
+/* ---------- metric cards ---------- */
+
+/* Dark, like the reference. The white cards were doing the work that the type
+   scale should do, and they broke the run of surfaces across the page. */
+.metric.glass {
+  background: var(--surface);
+  border: 1px solid var(--surface-line);
+  box-shadow: none;
+}
+
+.metric.glass .metric-head {
+  color: var(--subtle);
+}
+
+.metric.glass .metric-value {
+  color: var(--text);
+}
+
+.metric.glass .metric-value small,
+.metric.glass .metric-note,
+.metric.glass .metric-sub,
+.metric.glass .risk-list,
+.metric.glass .guide-steps em {
+  color: var(--muted);
+}
+
+/* Values carry the colour now, and only where the colour means something. */
+.metric.glass .tone-green {
+  color: var(--green);
+}
+
+.metric.glass .tone-red {
+  color: var(--red);
+}
+
+.metric.glass .tone-violet {
+  color: var(--violet-bright);
+}
+
+.metric.glass .tone-orange {
+  color: var(--orange);
+}
+
+.metric.glass .metric-head svg {
+  color: var(--muted);
+}
+
+.metric.glass .guide-step {
+  background: #26262f;
+}
+
+.metric.glass .guide-step.on {
+  background: var(--violet);
+  box-shadow: none;
+}
+
+.metric.glass .dots i {
+  background: #26262f;
+}
+
+.metric.glass .dots i.on {
+  background: var(--orange);
+}
+
+/* ---------- navigation ---------- */
+
+.nav-item {
+  color: var(--muted);
+  border-radius: var(--r-md);
+  padding: 11px 13px;
+  font-weight: 500;
+}
+
+.nav-item:hover {
+  color: var(--text);
+  background: var(--surface-2);
+}
+
+.nav-item.active {
+  color: var(--text);
+  background: var(--surface-2);
+  border: 1px solid var(--surface-line);
+}
+
+.nav-item.active svg {
+  color: var(--violet-bright);
+}
+
+/* ---------- controls ---------- */
+
+.search.glass {
+  background: var(--surface);
+  border: 1px solid var(--surface-line);
+  border-radius: var(--r-full);
+  padding: 13px 18px;
+}
+
+.search input::placeholder {
+  color: var(--subtle);
+}
+
+.kbd {
+  background: var(--surface-2);
+  border: 1px solid var(--surface-line);
+  color: var(--subtle);
+}
+
+.icon-btn {
+  background: var(--surface);
+  border: 1px solid var(--surface-line);
+  border-radius: var(--r-full);
+  color: var(--muted);
+}
+
+.icon-btn:hover {
+  background: var(--surface-2);
+  color: var(--text);
+}
+
+/* The user chip: initials, name, and a caret — as in the reference. */
+.user {
+  background: var(--surface);
+  border: 1px solid var(--surface-line);
+  border-radius: var(--r-full);
+  padding: 6px 14px 6px 6px;
+  gap: 10px;
+  color: var(--text);
+}
+
+.user-initials {
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  border-radius: var(--r-full);
+  background: var(--violet-deep);
+  color: #f4f4f7;
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+
+.btn-primary {
+  background: var(--violet);
+  border: 1px solid transparent;
+  border-radius: var(--r-md);
+  color: #fff;
+}
+
+.btn-primary:hover:not(:disabled) {
+  background: #7c4dfa;
+}
+
+.btn-ghost {
+  background: var(--surface-2);
+  border: 1px solid var(--surface-line);
+  border-radius: var(--r-md);
+  color: var(--text-dim);
+}
+
+.btn-ghost:hover:not(:disabled) {
+  background: #1d1d24;
+  color: var(--text);
+}
+
+.chip {
+  background: var(--surface-2);
+  border: 1px solid var(--surface-line);
+  color: var(--muted);
+}
+
+.badge {
+  background: var(--surface-2);
+  border: 1px solid var(--surface-line);
+  color: var(--muted);
+}
+
+/* ---------- lists and panels ---------- */
+
+.recent-item,
+.month-row,
+.alert-row,
+.search-row,
+.call-table tbody tr:hover td {
+  background: transparent;
+}
+
+.recent-item.clickable:hover,
+.month-row:hover,
+button.alert-row:hover,
+.search-row:hover {
+  background: var(--surface-2);
+}
+
+.call-table tbody tr:hover td {
+  background: var(--surface-2);
+}
+
+.call-table td,
+.compare-table td,
+.compare-table th,
+.month-row,
+.alert-row,
+.sk-row {
+  border-top-color: var(--surface-line-soft);
+}
+
+.tile {
+  background: var(--surface);
+  border: 1px solid var(--surface-line);
+}
+
+.tile:hover {
+  background: var(--surface-2);
+  border-color: #2e2e3a;
+}
+
+.assistant-head,
+.recent-head {
+  border-bottom: 1px solid var(--surface-line-soft);
+}
+
+.browse-all {
+  border-top-color: var(--surface-line-soft);
+  color: var(--muted);
+}
+
+/* ---------- chat ---------- */
+
+/* The question reads as a violet pill and the answer as a plain card — the
+   asymmetry is what makes a thread scannable. */
+.msg-user {
+  background: var(--violet);
+  border: none;
+  color: #fff;
+}
+
+.msg-bot {
+  background: var(--surface-2);
+  border: 1px solid var(--surface-line);
+  color: var(--text-dim);
+}
+
+.suggest {
+  background: var(--surface-2);
+  border: 1px solid var(--surface-line);
+  color: var(--text-dim);
+  border-radius: var(--r-md);
+}
+
+.suggest:hover {
+  background: #1d1d24;
+  color: var(--text);
+}
+
+.ask-row input {
+  background: var(--surface-2);
+  border: 1px solid var(--surface-line);
+  border-radius: var(--r-md);
+}
+
+.send-btn {
+  background: var(--violet);
+  border-radius: var(--r-sm);
+}
+
+/* ---------- breakdown ---------- */
+
+.bd-tab.on {
+  background: var(--surface-2);
+  border-color: var(--surface-line);
+  color: var(--text);
+}
+
+.bd-figure {
+  background: var(--surface);
+}
+
+.bd-figures {
+  background: var(--surface-line-soft);
+  border-color: var(--surface-line-soft);
+}
+
+.bd-exchange,
+.bd-person,
+.bd-note {
+  background: var(--surface-2);
+  border-color: var(--surface-line);
+}
+
+.bd-q {
+  background: transparent;
+}
+
+/* ---------- misc ---------- */
+
+.demo-banner {
+  background: var(--surface);
+  border: 1px solid var(--surface-line);
+}
+
+.skeleton .sk-dot,
+.skeleton .sk-line {
+  background: linear-gradient(
+    90deg,
+    #16161c 0%,
+    #22222b 50%,
+    #16161c 100%
+  );
+  background-size: 300% 100%;
+}
+
+.compare-story {
+  background: var(--surface-2);
+  border-color: var(--surface-line);
+}
+
+.brand-mark {
+  background: var(--violet);
+}
+
+.upload-icon {
+  background: var(--surface-2);
+  border: 1px solid var(--surface-line);
+  color: var(--violet-bright);
+}
+
+.upload-card.glass {
+  border-style: dashed;
+  border-color: #2a2a34;
+}
+
+.upload-card.over {
+  border-color: var(--violet);
+  background: #131320;
+}
+
+/* The demo banner in the reference carries an action on the right rather than
+   only stating a fact — an announcement with nothing to do about it is wasted
+   width. */
+.demo-banner {
+  display: flex;
+  align-items: center;
+  gap: var(--s-3);
+  padding: var(--s-3) var(--s-4);
+  border-radius: var(--r-md);
+  font-size: 12.5px;
+  color: var(--muted);
+}
+
+.demo-banner .demo-reset,
+.demo-banner .demo-cta {
+  margin-left: auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 11px;
+  border-radius: var(--r-sm);
+  border: 1px solid transparent;
+  background: transparent;
+  color: var(--violet-bright);
+  font: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.demo-banner .demo-reset:hover,
+.demo-banner .demo-cta:hover {
+  background: var(--surface-2);
+}
+
+.demo-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: var(--r-full);
+  background: var(--violet);
+  flex: none;
+}
+
+.demo-dot.live {
+  background: var(--green);
+}
+
+/* Recent-call rows get a chevron, as in the reference — it tells you the row
+   does something before you hover it. */
+.recent-item.clickable {
+  display: flex;
+  align-items: center;
+  gap: var(--s-3);
+}
+
+.recent-item .recent-go {
+  margin-left: auto;
+  color: var(--subtle);
+  flex: none;
+}
+
+.recent-item.clickable:hover .recent-go {
+  color: var(--text-dim);
+}
+
+/* =========================================================
+   ATMOSPHERE
+   ---------------------------------------------------------
+   The flat pass went too far. In the reference the panels are not plain dark
+   rectangles: violet light bleeds across them, strongest where the cube sits
+   and falling off toward the edges — as if the object on the panel is lighting
+   it. That haze is what keeps the surface from reading as cardboard.
+
+   Two things below: the spray of light on the panels, and a rebuild of the
+   cubes as dark glass with lit edges rather than solid violet blocks.
+   ========================================================= */
+
+/* ---------- panel light ---------- */
+
+/* The hero. Light comes from the right, where the cube stands. */
+.featured.glass {
+  position: relative;
+  background:
+    radial-gradient(
+      620px 420px at 78% 46%,
+      rgba(139, 92, 246, 0.22) 0%,
+      rgba(109, 40, 217, 0.09) 38%,
+      transparent 72%
+    ),
+    linear-gradient(150deg, #16121f 0%, #0f0e14 62%);
+  border-color: #2a2338;
+  overflow: hidden;
+}
+
+/* Every other panel gets a much fainter version of the same wash, angled from
+   the top-left so the whole page reads as lit from one direction. */
+.glass {
+  position: relative;
+  background:
+    radial-gradient(
+      520px 300px at 8% -10%,
+      rgba(139, 92, 246, 0.075) 0%,
+      transparent 62%
+    ),
+    var(--surface);
+}
+
+.metric.glass {
+  background:
+    radial-gradient(
+      280px 180px at 12% -20%,
+      rgba(139, 92, 246, 0.09) 0%,
+      transparent 68%
+    ),
+    var(--surface);
+}
+
+/* A hairline of light along the top edge. One pixel, and it is the difference
+   between a panel that sits in the page and one that sits on it. */
+.glass::before {
+  content: "";
+  display: block;
+  position: absolute;
+  top: 0;
+  left: 14%;
+  right: 14%;
+  height: 1px;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(167, 139, 250, 0.34),
+    transparent
+  );
+  pointer-events: none;
+}
+
+.featured.glass::before {
+  display: block;
+  left: 6%;
+  right: 6%;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(167, 139, 250, 0.5),
+    transparent
+  );
+}
+
+.sidebar.glass::before,
+.search.glass::before,
+.search-panel.glass::before {
+  display: none;
+}
+
+/* ---------- the cubes ---------- */
+
+/* Dark glass with lit edges, standing on a violet slab. The previous version
+   filled the faces with violet, which made them read as painted blocks; in the
+   reference the faces are nearly black and it is the *edges* that carry the
+   colour, with the glow spilling onto the panel behind. */
+.cube-scene {
+  perspective: 900px;
+}
+
+.cube-glow {
+  bottom: 16px;
+  width: 210px;
+  height: 90px;
+  background: radial-gradient(
+    ellipse at center,
+    rgba(139, 92, 246, 0.55) 0%,
+    rgba(109, 40, 217, 0.22) 45%,
+    transparent 72%
+  );
+  filter: blur(26px);
+}
+
+.face {
+  border-radius: 5px;
+  border: 1px solid rgba(196, 168, 255, 0.55);
+  /* The lit edge: a tight violet bloom just outside the border line. */
+  box-shadow:
+    0 0 12px rgba(139, 92, 246, 0.5),
+    0 0 3px rgba(196, 181, 253, 0.7);
+}
+
+/* The upper cube is glass: dark, barely tinted, so the edges do the talking. */
+.cube-top .face {
+  background: linear-gradient(
+    155deg,
+    rgba(60, 44, 100, 0.5) 0%,
+    rgba(24, 18, 44, 0.62) 55%,
+    rgba(16, 12, 30, 0.7) 100%
+  );
+  backdrop-filter: blur(3px);
+  -webkit-backdrop-filter: blur(3px);
+}
+
+.cube-top .face-top {
+  background: linear-gradient(
+    155deg,
+    rgba(126, 100, 190, 0.55),
+    rgba(72, 54, 130, 0.42)
+  );
+  border-color: rgba(226, 214, 255, 0.8);
+  box-shadow:
+    0 0 20px rgba(167, 139, 250, 0.55),
+    0 0 4px rgba(233, 226, 255, 0.75);
+}
+
+/* The base is the solid one — a violet slab the glass cube stands on. */
+.cube-base .face {
+  background: linear-gradient(
+    155deg,
+    rgba(124, 74, 226, 0.62) 0%,
+    rgba(88, 46, 178, 0.55) 55%,
+    rgba(58, 28, 122, 0.5) 100%
+  );
+  border-color: rgba(186, 154, 255, 0.6);
+}
+
+.cube-base .face-top {
+  background: linear-gradient(
+    155deg,
+    rgba(168, 128, 255, 0.72),
+    rgba(120, 74, 220, 0.6)
+  );
+  border-color: rgba(226, 214, 255, 0.85);
+  box-shadow:
+    0 0 26px rgba(167, 139, 250, 0.5),
+    0 0 4px rgba(233, 226, 255, 0.7);
+}
+
+.cube-base .face-left {
+  background: linear-gradient(
+    155deg,
+    rgba(74, 40, 152, 0.55),
+    rgba(44, 22, 96, 0.5)
+  );
+}
+
+/* The logo badge stays a bright white chip, which is what makes it pop off the
+   dark glass. */
+.face-badge {
+  background: #ffffff;
+  box-shadow:
+    0 6px 18px rgba(10, 4, 26, 0.55),
+    0 0 22px rgba(167, 139, 250, 0.3);
+}
+
+/* The active nav item picks up the same violet as everything else that is
+   "on" — in the reference it reads as tinted, not just a lighter grey. */
+.nav-item.active {
+  background: linear-gradient(
+    100deg,
+    rgba(139, 92, 246, 0.18),
+    rgba(139, 92, 246, 0.07)
+  );
+  border-color: rgba(139, 92, 246, 0.26);
+  color: var(--text);
+}
+
+.nav-item.active svg {
+  color: var(--violet-bright);
+}
+
+/* Buttons carry a little of the same light rather than sitting flat. */
+.btn-primary {
+  background: linear-gradient(140deg, #9b6bff 0%, #7c3aed 100%);
+  box-shadow: 0 6px 18px rgba(109, 40, 217, 0.34);
+}
+
+.btn-primary:hover:not(:disabled) {
+  background: linear-gradient(140deg, #a87bff 0%, #8b4df5 100%);
+}
+
+.send-btn {
+  background: linear-gradient(140deg, #9b6bff 0%, #7c3aed 100%);
+}
+
+.brand-mark {
+  background: linear-gradient(145deg, #9b6bff, #6d28d9);
+}
+
+.user-initials {
+  background: linear-gradient(145deg, #7c4dfa, #5b21b6);
+}
+
+/* The question pill in the chat matches the primary button, so "this is you"
+   and "this is the main action" share one colour. */
+.msg-user {
+  background: linear-gradient(140deg, #8b5cf6 0%, #7028e0 100%);
+}
+
+/* The featured badge sits on the lit part of the panel, so it needs a touch
+   more presence than the neutral chips elsewhere. */
+.featured .badge {
+  background: rgba(139, 92, 246, 0.16);
+  border-color: rgba(139, 92, 246, 0.3);
+  color: #c9b8ff;
+  letter-spacing: 0.09em;
+}
+
+/* =========================================================
+   CUBE GEOMETRY
+   ---------------------------------------------------------
+   The upper cube carried an extra rotateY(20deg) that the base did not. Two
+   boxes at different angles do not read as a stack — they read as one object
+   and one mistake, and the effect showed up as the top face looking like a lid
+   floating loose above the body.
+
+   Both cubes now share the scene's rotation exactly. The upper one is pushed
+   back in Z so it sits toward the rear of the base's top face, as in the
+   reference, rather than dead centre.
+   ========================================================= */
+
+.cube-stack {
+  width: 168px;
+  height: 210px;
+  transform: rotateX(-24deg) rotateY(-32deg);
+}
+
+@keyframes cubeFloat {
+  0%,
+  100% {
+    transform: rotateX(-24deg) rotateY(-32deg) translateY(0);
+  }
+  50% {
+    transform: rotateX(-22deg) rotateY(-28deg) translateY(-9px);
+  }
+}
+
+.cube-base {
+  left: 12px;
+  bottom: 0;
+}
+
+.cube-top {
+  left: 32px;
+  bottom: 124px;
+  /* No extra rotation — same orientation as the base. Pushed back so the
+     stack has depth instead of looking like one cube balanced on another. */
+  transform: translateZ(-16px);
+}
+
+/* ---------- lighting ---------- */
+
+/* The reference has a wide, soft violet bloom around the whole stack rather
+   than a tight rim on each edge. */
+.cube-glow {
+  bottom: 8px;
+  width: 240px;
+  height: 130px;
+  background: radial-gradient(
+    ellipse at center,
+    rgba(139, 92, 246, 0.6) 0%,
+    rgba(124, 58, 237, 0.28) 42%,
+    transparent 74%
+  );
+  filter: blur(32px);
+}
+
+.face {
+  border-radius: 6px;
+  border: 1.5px solid rgba(203, 178, 255, 0.75);
+  box-shadow:
+    0 0 18px rgba(139, 92, 246, 0.55),
+    0 0 5px rgba(214, 196, 255, 0.6),
+    inset 0 0 22px rgba(139, 92, 246, 0.12);
+}
+
+/* Upper cube: dark glass. Nearly black faces, bright edges. */
+.cube-top .face {
+  background: linear-gradient(
+    155deg,
+    rgba(48, 38, 78, 0.72) 0%,
+    rgba(26, 20, 46, 0.8) 52%,
+    rgba(18, 14, 32, 0.85) 100%
+  );
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+
+.cube-top .face-top {
+  background: linear-gradient(
+    155deg,
+    rgba(96, 78, 150, 0.75),
+    rgba(52, 40, 92, 0.7)
+  );
+  border-color: rgba(233, 222, 255, 0.9);
+}
+
+/* Base: the violet slab, lighter on top where the light falls. */
+.cube-base .face {
+  background: linear-gradient(
+    155deg,
+    rgba(126, 84, 224, 0.9) 0%,
+    rgba(104, 62, 200, 0.88) 55%,
+    rgba(82, 46, 170, 0.85) 100%
+  );
+  border-color: rgba(206, 182, 255, 0.8);
+}
+
+.cube-base .face-top {
+  background: linear-gradient(
+    155deg,
+    rgba(160, 122, 250, 0.95),
+    rgba(124, 80, 222, 0.9)
+  );
+  border-color: rgba(238, 230, 255, 0.95);
+}
+
+.cube-base .face-left {
+  background: linear-gradient(
+    155deg,
+    rgba(88, 50, 178, 0.9),
+    rgba(64, 34, 138, 0.88)
+  );
+}
+
+.cube-base .face-right {
+  background: linear-gradient(
+    155deg,
+    rgba(112, 70, 210, 0.9),
+    rgba(88, 50, 178, 0.88)
+  );
+}
+
+/* The logo chip, sized to the larger cube. */
+.face-badge {
+  width: 48px;
+  height: 48px;
+  border-radius: 13px;
+  padding: 8px;
+}
+
+/* ---------- supplied logo ---------- */
+
+/* The mark you supplied is a self-contained circular badge. Sitting it inside
+   the violet rounded square would be a shape inside a shape, so the tile drops
+   away when a logo file is present and the mark stands on its own. The tile
+   stays for the built-in fallback, which is a bare glyph and needs one. */
+.brand-mark:has(.brand-img) {
+  background: none;
+  box-shadow: none;
+  width: 34px;
+  height: 34px;
+}
+
+.brand-img {
+  padding: 0;
+  filter: drop-shadow(0 0 10px rgba(139, 92, 246, 0.45));
+}
+
+/* =========================================================
+   CUBE SIZING
+   ---------------------------------------------------------
+   The stack was drawn at 124/84, which projects to 171 x 243px once the scene
+   rotation is applied — 33px taller than the 210px box it lives in. The panel
+   clips overflow, so the base cube was being sliced off at the bottom.
+
+   A rotated box is much larger on screen than its side length suggests: the
+   diagonal does the work. Sized here from the projected bounding box rather
+   than from the cube dimension, which is the number that actually matters.
+
+   94 / 64 projects to 130 x 184px, leaving room for the float animation and a
+   margin on every side.
+   ========================================================= */
+
+.cube-stack {
+  width: 140px;
+  height: 190px;
+}
+
+.cube-base {
+  left: 9px;
+  bottom: 0;
+}
+
+.cube-top {
+  left: 24px;
+  bottom: 94px;
+  transform: translateZ(-12px);
+}
+
+/* The glow scales with the stack, and stays inside the panel so it reads as
+   light on the surface rather than a shape cut off at the edge. */
+.cube-glow {
+  bottom: 14px;
+  width: 180px;
+  height: 100px;
+  filter: blur(26px);
+}
+
+.face-badge {
+  width: 38px;
+  height: 38px;
+  border-radius: 10px;
+  padding: 6px;
+}
+
+/* ---------- backend offline notice ---------- */
+
+/* Only rendered while the API is unreachable. It names the fix and offers a
+   retry, instead of leaving a dead error with no way forward. */
+.backend-banner {
+  display: flex;
+  align-items: center;
+  gap: var(--s-3);
+  padding: var(--s-3) var(--s-4);
+  border-radius: var(--r-md);
+  border: 1px solid rgba(248, 113, 113, 0.28);
+  background: rgba(248, 113, 113, 0.08);
+  color: #fca5a5;
+  animation: pageIn 0.15s cubic-bezier(0.32, 0.72, 0, 1) both;
+}
+
+.backend-banner > svg {
+  flex: none;
+}
+
+.backend-copy {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+
+.backend-copy strong {
+  font-size: 12.5px;
+  font-weight: 600;
+  color: #fecaca;
+}
+
+.backend-copy span {
+  font-size: 11.5px;
+  color: var(--muted);
+}
+
+.backend-copy code {
+  padding: 1px 6px;
+  border-radius: var(--r-xs);
+  background: rgba(255, 255, 255, 0.07);
+  font-family: "IBM Plex Mono", ui-monospace, monospace;
+  font-size: 11px;
+  color: #fecaca;
+}
+
+.backend-banner button {
+  margin-left: auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 13px;
+  border-radius: var(--r-sm);
+  border: 1px solid rgba(248, 113, 113, 0.3);
+  background: rgba(248, 113, 113, 0.12);
+  color: #fecaca;
+  font: inherit;
+  font-size: 11.5px;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.backend-banner button:hover:not(:disabled) {
+  background: rgba(248, 113, 113, 0.2);
+}
+
+.backend-banner button:disabled {
+  opacity: 0.6;
+  cursor: default;
+}

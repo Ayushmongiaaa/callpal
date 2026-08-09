@@ -1,0 +1,254 @@
+"""Find earnings calls without having to hunt down a transcript file.
+
+Backed by Alpha Vantage, which publishes two endpoints we need:
+
+    SYMBOL_SEARCH            ticker lookup from a company name
+    EARNINGS_CALL_TRANSCRIPT full transcript for a symbol and quarter
+
+Both are on the free tier. The free key allows roughly 25 requests a day, so
+results are cached in memory for the life of the process — typing "nvid" in the
+search box would otherwise burn four requests before you finish the word.
+
+The key lives in ALPHAVANTAGE_API_KEY. Without it, search returns a clear
+message rather than failing: uploading a file still works, and the app should
+degrade to that rather than break.
+"""
+
+import re
+import time
+import urllib.parse
+import urllib.request
+
+from config import setting
+
+BASE = "https://www.alphavantage.co/query"
+TIMEOUT = 25
+
+# question -> (fetched_at, payload)
+_cache: dict[str, tuple[float, object]] = {}
+CACHE_TTL = 60 * 30
+
+
+class NoKey(Exception):
+    pass
+
+
+class RateLimited(Exception):
+    pass
+
+
+class NotAvailable(Exception):
+    pass
+
+
+def configured() -> bool:
+    return bool(setting("ALPHAVANTAGE_API_KEY"))
+
+
+def _key() -> str:
+    key = setting("ALPHAVANTAGE_API_KEY")
+
+    if not key:
+        raise NoKey(
+            "Company search needs a free Alpha Vantage key. Get one at "
+            "alphavantage.co/support/#api-key and put it in backend/.env as "
+            "ALPHAVANTAGE_API_KEY. Uploading a file works without it."
+        )
+
+    return key
+
+
+def _get(params: dict) -> dict:
+    """One Alpha Vantage call, with caching and its quirky errors decoded.
+
+    Alpha Vantage returns HTTP 200 for everything, including being out of
+    quota — the failure arrives as an "Information" or "Note" key in the body,
+    so status codes cannot be trusted here.
+    """
+    import json
+
+    params = {**params, "apikey": _key()}
+    cache_key = json.dumps({k: v for k, v in params.items() if k != "apikey"}, sort_keys=True)
+
+    hit = _cache.get(cache_key)
+    if hit and time.time() - hit[0] < CACHE_TTL:
+        return hit[1]
+
+    url = f"{BASE}?{urllib.parse.urlencode(params)}"
+
+    with urllib.request.urlopen(url, timeout=TIMEOUT) as response:
+        body = json.loads(response.read().decode("utf-8"))
+
+    if not isinstance(body, dict):
+        raise NotAvailable("The data provider returned something unexpected.")
+
+    note = body.get("Note") or body.get("Information") or ""
+
+    if note:
+        lowered = note.lower()
+        if "demo" in lowered or "api key" in lowered:
+            raise NoKey(
+                "That Alpha Vantage key was rejected. Check "
+                "ALPHAVANTAGE_API_KEY in backend/.env."
+            )
+        raise RateLimited(
+            "The free Alpha Vantage tier allows about 25 requests a day and "
+            "that is used up for now. Uploading a transcript still works."
+        )
+
+    if body.get("Error Message"):
+        raise NotAvailable(str(body["Error Message"])[:200])
+
+    _cache[cache_key] = (time.time(), body)
+    return body
+
+
+def search(query: str, limit: int = 6) -> list[dict]:
+    """Companies matching a name or ticker, US listings first."""
+    query = query.strip()
+
+    if len(query) < 2:
+        return []
+
+    body = _get({"function": "SYMBOL_SEARCH", "keywords": query})
+    matches = body.get("bestMatches") or []
+
+    results = []
+    for m in matches:
+        symbol = m.get("1. symbol", "")
+        # Skip foreign listings of the same company — they clutter the list and
+        # rarely have a transcript behind them.
+        if not symbol or "." in symbol:
+            continue
+
+        results.append(
+            {
+                "symbol": symbol,
+                "name": m.get("2. name", ""),
+                "type": m.get("3. type", ""),
+                "region": m.get("4. region", ""),
+                "currency": m.get("8. currency", ""),
+                "score": float(m.get("9. matchScore") or 0),
+            }
+        )
+
+    results.sort(key=lambda r: (r["region"] != "United States", -r["score"]))
+    return results[:limit]
+
+
+def recent_quarters(count: int = 8, today=None) -> list[str]:
+    """The last few quarters as Alpha Vantage labels them, newest first.
+
+    A quarter that has only just ended has no transcript yet, so we start one
+    quarter back.
+    """
+    import datetime
+
+    today = today or datetime.date.today()
+    quarter = (today.month - 1) // 3 + 1
+    year = today.year
+
+    out = []
+    for _ in range(count + 1):
+        quarter -= 1
+        if quarter == 0:
+            quarter = 4
+            year -= 1
+        out.append(f"{year}Q{quarter}")
+
+    return out[:count]
+
+
+def _flatten(payload) -> str:
+    """Turn the provider's transcript payload into plain speaker-labelled text.
+
+    The shape is documented as a list of turns, but providers reshape their
+    responses without warning, so a bare string and a wrapped list are both
+    accepted rather than crashing on the day it changes.
+    """
+    if isinstance(payload, str):
+        return payload.strip()
+
+    if isinstance(payload, dict):
+        for field in ("transcript", "content", "text", "data"):
+            if field in payload:
+                return _flatten(payload[field])
+        return ""
+
+    if not isinstance(payload, list):
+        return ""
+
+    lines = []
+    for turn in payload:
+        if isinstance(turn, str):
+            lines.append(turn.strip())
+            continue
+
+        if not isinstance(turn, dict):
+            continue
+
+        speaker = (turn.get("speaker") or turn.get("name") or "").strip()
+        title = (turn.get("title") or turn.get("role") or "").strip()
+        said = (turn.get("content") or turn.get("text") or "").strip()
+
+        if not said:
+            continue
+
+        if speaker and title:
+            lines.append(f"{speaker.upper()} ({title}): {said}")
+        elif speaker:
+            lines.append(f"{speaker.upper()}: {said}")
+        else:
+            lines.append(said)
+
+    return "\n\n".join(lines).strip()
+
+
+def transcript(symbol: str, quarter: str) -> dict:
+    """One quarter's transcript as plain text, ready for the analyzer."""
+    symbol = symbol.strip().upper()
+
+    if not re.fullmatch(r"[A-Z][A-Z0-9.\-]{0,9}", symbol):
+        raise NotAvailable(f"{symbol!r} does not look like a ticker.")
+
+    if not re.fullmatch(r"\d{4}Q[1-4]", quarter):
+        raise NotAvailable("Quarter must look like 2024Q1.")
+
+    body = _get(
+        {
+            "function": "EARNINGS_CALL_TRANSCRIPT",
+            "symbol": symbol,
+            "quarter": quarter,
+        }
+    )
+
+    text = _flatten(body.get("transcript", body))
+
+    if len(text.split()) < 200:
+        raise NotAvailable(
+            f"No transcript published for {symbol} {quarter}. "
+            "Try an earlier quarter."
+        )
+
+    return {"symbol": symbol, "quarter": quarter, "text": text}
+
+
+def latest_transcript(symbol: str, tries: int = 4) -> dict:
+    """Walk back from the most recent quarter until a transcript exists.
+
+    Companies report on different calendars, and the newest quarter is often
+    not published yet, so the first hit is rarely the current quarter.
+    """
+    problems = []
+
+    for quarter in recent_quarters(tries):
+        try:
+            return transcript(symbol, quarter)
+        except NotAvailable as exc:
+            problems.append(str(exc))
+            continue
+
+    raise NotAvailable(
+        f"No published transcript found for {symbol} in the last {tries} "
+        "quarters. Upload the transcript directly instead."
+    )

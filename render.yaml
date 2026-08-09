@@ -1,0 +1,40 @@
+# Render deployment for the CallPal API.
+#
+# The free instance type sleeps after inactivity and wakes on the next request,
+# which is why the frontend's HTTP timeout is generous and the UI shows a
+# "waking up" state rather than an error.
+#
+# Free instances also have an ephemeral filesystem: the SQLite database is
+# rebuilt empty whenever the instance restarts. That is a real limitation of the
+# free tier, not of the code — attaching a persistent disk (a paid feature) is a
+# one-line change to this file.
+
+services:
+  - type: web
+    name: callpal-api
+    runtime: python
+    plan: free
+    region: oregon
+    rootDir: backend
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn main:app --host 0.0.0.0 --port $PORT
+    healthCheckPath: /health
+    envVars:
+      - key: PYTHON_VERSION
+        value: "3.12"
+
+      # Set in the Render dashboard, never committed.
+      - key: GEMINI_API_KEY
+        sync: false
+      - key: ALPHAVANTAGE_API_KEY
+        sync: false
+
+      # The deployed frontend URL. Accepts a comma-separated list so Vercel
+      # preview deployments can be allowed too.
+      - key: FRONTEND_ORIGIN
+        sync: false
+
+      # Well under Render's request limits, and small enough that a free
+      # instance is not asked to hold a 500MB upload in memory.
+      - key: MAX_UPLOAD_MB
+        value: "25"
