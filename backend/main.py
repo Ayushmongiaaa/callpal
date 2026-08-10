@@ -74,6 +74,22 @@ class ChatRequest(BaseModel):
     question: str
 
 
+@app.get("/")
+def root():
+    """A signpost rather than a 404.
+
+    This is an API, so the root has nothing to render — but anyone who opens
+    the bare URL out of curiosity lands here, and `{"detail":"Not Found"}` reads
+    like something is broken when nothing is. Say what this is and where to go.
+    """
+    return {
+        "service": "CallPal API",
+        "docs": "/docs",
+        "health": "/health",
+        "app": os.getenv("FRONTEND_ORIGIN", "").split(",")[0] or None,
+    }
+
+
 @app.get("/health")
 def health():
     return {"status": "ok", "model": active_model() or "not yet resolved", **store.stats()}
