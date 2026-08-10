@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { Check, Quotes, TrendDown, TrendUp, X } from "@phosphor-icons/react";
 
 /**
@@ -64,7 +65,14 @@ function QuotePopover({ anchor, source, tone, onClose }) {
     };
   }, [anchor, onClose]);
 
-  return (
+  // Rendered into <body>, not in place.
+  //
+  // The Takeaways card uses `backdrop-filter`, and that creates a stacking
+  // context — which traps `position: fixed` children inside it no matter how
+  // high their z-index goes. Left in place, the quote was painted underneath
+  // the Recent Calls rail. A portal is the only reliable way out of an
+  // ancestor's stacking context.
+  return createPortal(
     <div
       ref={card}
       className={`quote-pop ${tone} ${pos ? "placed" : ""}`}
@@ -84,7 +92,8 @@ function QuotePopover({ anchor, source, tone, onClose }) {
       </div>
 
       <blockquote>{source.excerpt}</blockquote>
-    </div>
+    </div>,
+    document.body,
   );
 }
 

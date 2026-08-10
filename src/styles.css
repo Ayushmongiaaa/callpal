@@ -1640,7 +1640,9 @@ body {
    in the wrong corner first would be worse than the layout shift this replaced. */
 .quote-pop {
   position: fixed;
-  z-index: 60;
+  /* Portalled to <body>, so this competes at the top level. Above the sidebar
+     and the rail, below the walkthrough overlay at 60. */
+  z-index: 55;
   padding: 10px 12px 12px;
   border-radius: var(--r-md);
   border: 1px solid rgba(255, 255, 255, 0.1);
@@ -2644,36 +2646,35 @@ button.view-all:hover {
 /* The spotlight glides between steps instead of snapping. The class is only
    applied while a step change is in flight — during a scroll the hole has to
    track its target frame for frame. */
-/* Position is never animated.
+/* One eased move, and only ever on a still page.
  *
- * Interpolating top/left/width/height is what made the spotlight swoop across
- * the page and appear to visit places it had no business being. It is now
- * placed at its destination and revealed there; only opacity moves. These
- * overrides come after the earlier rules on purpose. */
+ * The spotlight is not repositioned until scrolling has finished, so this
+ * transition can never interpolate toward a moving target — which is what made
+ * it jitter before. And it is never faded in or out, because its shadow is what
+ * dims the page: fading it would flash the page bright mid-step.
+ *
+ * These come after the earlier declarations on purpose. */
 .tour-hole,
 .tour-card {
-  transition: opacity 0.18s ease;
+  transition:
+    top 0.42s cubic-bezier(0.32, 0.72, 0, 1),
+    left 0.42s cubic-bezier(0.32, 0.72, 0, 1),
+    width 0.42s cubic-bezier(0.32, 0.72, 0, 1),
+    height 0.42s cubic-bezier(0.32, 0.72, 0, 1);
 }
 
 .tour-card {
   opacity: 0;
 }
 
+/* The card fades in once, on the first step. After that it glides with the
+   spotlight and stays visible. */
 .tour-card.shown {
   opacity: 1;
-}
-
-.tour-hole {
-  animation: tourHoleIn 0.2s ease both;
-}
-
-@keyframes tourHoleIn {
-  from {
-    opacity: 0;
-  }
-  to {
-    opacity: 1;
-  }
+  transition:
+    top 0.42s cubic-bezier(0.32, 0.72, 0, 1),
+    left 0.42s cubic-bezier(0.32, 0.72, 0, 1),
+    opacity 0.22s ease;
 }
 
 .tour-copy {
@@ -3908,21 +3909,27 @@ button.alert-row > .recent-logo {
   overflow: hidden;
 }
 
-.bd-exchange summary {
+/* Was a <details><summary>. It is a button now so that only one exchange can
+   be open at a time — the browser's own element has no concept of that. */
+.bd-exchange-head {
   display: flex;
   align-items: center;
   gap: 10px;
+  width: 100%;
   padding: 12px 14px;
+  border: 0;
+  background: none;
+  font: inherit;
+  text-align: left;
   cursor: pointer;
-  list-style: none;
 }
 
-.bd-exchange summary::-webkit-details-marker {
-  display: none;
+.bd-exchange-head:hover {
+  background: rgba(150, 132, 200, 0.06);
 }
 
-.bd-exchange[open] summary {
-  border-bottom: 1px solid var(--surface-line-soft);
+.bd-exchange.on {
+  border-color: rgba(167, 139, 250, 0.34);
 }
 
 .bd-analyst {
@@ -3975,7 +3982,7 @@ button.alert-row > .recent-logo {
   transition: transform 0.18s ease;
 }
 
-.bd-exchange[open] .bd-caret {
+.bd-exchange.on .bd-caret {
   transform: rotate(180deg);
 }
 
@@ -3990,11 +3997,22 @@ button.alert-row > .recent-logo {
 .bd-q {
   color: var(--text);
   background: rgba(150, 132, 200, 0.04);
+  border-top: 1px solid var(--surface-line-soft);
 }
 
 .bd-a {
   color: var(--text-dim);
   border-top: 1px solid var(--surface-line-soft);
+  animation: bdAnswerIn 0.18s ease both;
+}
+
+@keyframes bdAnswerIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
 }
 
 .bd-a strong {

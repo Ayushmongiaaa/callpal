@@ -117,15 +117,19 @@ export default function Walkthrough({ delay = 4000 }) {
   /**
    * Place the spotlight on the current step's element.
    *
-   * The rule here is that the spotlight never travels. Previously it
-   * interpolated between the old and new positions, which sent it swooping
-   * diagonally across the page on a big jump; and during a scroll it tracked
-   * the element every frame, so it rode along with the moving page and looked
-   * like it wandered somewhere wrong before arriving.
+   * Three failure modes have been through here, so the reasoning is worth
+   * keeping:
    *
-   * Now it fades out, the page scrolls with nothing drawn on it, and it fades
-   * back in already at its destination. Only opacity animates. There is no path
-   * to watch, so there is nothing to jitter.
+   *   1. Gliding *while* the page scrolled made it chase a moving target and
+   *      jitter. So scrolling and moving are now strictly sequential.
+   *   2. Tracking the element every frame during the scroll made it ride along
+   *      with the page and appear to wander somewhere wrong first. So it holds
+   *      still on the previous element while the page scrolls.
+   *   3. Unmounting it between steps made the page flash undimmed for a frame,
+   *      because the dimming *is* the spotlight's shadow. So it is never
+   *      unmounted — it stays put, then glides once, after the page is still.
+   *
+   * The result: scroll, wait for everything to settle, then one eased move.
    */
   useLayoutEffect(() => {
     if (!open) return undefined;
@@ -139,9 +143,6 @@ export default function Walkthrough({ delay = 4000 }) {
 
     let cancelled = false;
     let frame = 0;
-    let timer = 0;
-
-    setShown(false);
 
     const place = () => {
       if (cancelled) return;
@@ -153,42 +154,41 @@ export default function Walkthrough({ delay = 4000 }) {
     const box = el.getBoundingClientRect();
     const needsScroll = box.top < 80 || box.bottom > window.innerHeight - 80;
 
-    if (needsScroll) {
-      el.scrollIntoView({ block: "center", behavior: "smooth" });
+    if (!needsScroll) {
+      place();
+      return undefined;
+    }
 
-      // Wait for the scroll to finish before measuring even once. The rail and
-      // the sidebar are `position: sticky`, so they keep moving until the page
-      // stops — measuring early is what put the spotlight in the wrong place.
-      const deadline = performance.now() + 1600;
-      let lastTop = null;
-      let stillFor = 0;
+    el.scrollIntoView({ block: "center", behavior: "smooth" });
 
-      const settled = () => {
-        if (cancelled) return;
+    // Hold position while the page moves, and do not measure until it has
+    // stopped. The rail and the sidebar are `position: sticky`, so they keep
+    // shifting until the scroll ends — measuring early is what put the
+    // spotlight somewhere it did not belong.
+    const deadline = performance.now() + 1600;
+    let lastTop = null;
+    let stillFor = 0;
 
-        const r = el.getBoundingClientRect();
-        stillFor = lastTop !== null && Math.abs(r.top - lastTop) < 0.5 ? stillFor + 1 : 0;
-        lastTop = r.top;
+    const settled = () => {
+      if (cancelled) return;
 
-        if (stillFor >= 3 || performance.now() > deadline) {
-          place();
-          return;
-        }
+      const r = el.getBoundingClientRect();
+      stillFor = lastTop !== null && Math.abs(r.top - lastTop) < 0.5 ? stillFor + 1 : 0;
+      lastTop = r.top;
 
-        frame = requestAnimationFrame(settled);
-      };
+      if (stillFor >= 3 || performance.now() > deadline) {
+        place();
+        return;
+      }
 
       frame = requestAnimationFrame(settled);
-    } else {
-      // Already on screen: nothing needs to move, so just long enough for the
-      // fade-out to register before it reappears in its new place.
-      timer = setTimeout(place, 120);
-    }
+    };
+
+    frame = requestAnimationFrame(settled);
 
     return () => {
       cancelled = true;
       if (frame) cancelAnimationFrame(frame);
-      clearTimeout(timer);
     };
   }, [open, step]);
 
@@ -273,9 +273,9 @@ export default function Walkthrough({ delay = 4000 }) {
 
   return (
     <div className="tour">
-      {/* While a step change is in flight the page keeps its plain dim, so the
-          screen never goes bright and nothing is seen sliding across it. */}
-      {rect && shown ? (
+      {/* Never unmounted while a target exists: this element's shadow *is* the
+          page dimming, so swapping it out flashes the page bright. */}
+      {rect ? (
         <div
           className="tour-hole"
           style={{
@@ -292,7 +292,7 @@ export default function Walkthrough({ delay = 4000 }) {
 
       <div
         className={`tour-card ${shown ? "shown" : ""}`}
-        style={rect && shown ? cardStyle : undefined}
+        style={rect ? cardStyle : undefined}
         role="dialog"
         aria-label="CallPal walkthrough"
       >

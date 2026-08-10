@@ -53,6 +53,10 @@ function Empty({ children }) {
 export default function CallBreakdown({ call }) {
   const [open, setOpen] = useState("opening");
 
+  // Which Q&A exchange is expanded, if any. Index rather than a boolean per
+  // row, because only one may be open at once.
+  const [openQa, setOpenQa] = useState(null);
+
   const opening = call.opening ?? {};
   const financials = call.financials ?? {};
   const outlook = call.outlook ?? {};
@@ -228,27 +232,46 @@ export default function CallBreakdown({ call }) {
                 by whether it actually addressed the question.
               </p>
 
+              {/* One exchange open at a time, all closed to begin with.
+                  Every exchange expanded stacked up into a page that kept
+                  going and going; this caps the section's height at one
+                  answer, and the question is always visible so you can see
+                  what you are opening. */}
               <div className="bd-qa">
-                {qa.map((x, i) => (
-                  <details className="bd-exchange" key={i}>
-                    <summary>
-                      <span className="bd-analyst">
-                        {x.analyst || "Analyst"}
-                        {x.firm && <em>{x.firm}</em>}
-                      </span>
-                      <span className={`bd-directness ${DIRECTNESS[x.directness] || ""}`}>
-                        {x.directness || "—"}
-                      </span>
-                      <CaretDown size={12} weight="bold" className="bd-caret" />
-                    </summary>
+                {qa.map((x, i) => {
+                  const isOpen = openQa === i;
 
-                    <p className="bd-q">{x.question}</p>
-                    <p className="bd-a">
-                      {x.answered_by && <strong>{x.answered_by}: </strong>}
-                      {x.answer}
-                    </p>
-                  </details>
-                ))}
+                  return (
+                    <div className={`bd-exchange ${isOpen ? "on" : ""}`} key={i}>
+                      <button
+                        className="bd-exchange-head"
+                        onClick={() => setOpenQa(isOpen ? null : i)}
+                        aria-expanded={isOpen}
+                        type="button"
+                      >
+                        <span className="bd-analyst">
+                          {x.analyst || "Analyst"}
+                          {x.firm && <em>{x.firm}</em>}
+                        </span>
+                        <span
+                          className={`bd-directness ${DIRECTNESS[x.directness] || ""}`}
+                        >
+                          {x.directness || "—"}
+                        </span>
+                        <CaretDown size={12} weight="bold" className="bd-caret" />
+                      </button>
+
+                      <p className="bd-q">{x.question}</p>
+
+                      {isOpen && (
+                        <p className="bd-a">
+                          {x.answered_by && <strong>{x.answered_by}: </strong>}
+                          {x.answer}
+                        </p>
+                      )}
+                    </div>
+                  );
+                })}
               </div>
             </>
           ) : (
