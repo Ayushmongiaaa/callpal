@@ -5152,3 +5152,17 @@ button.alert-row:hover,
   opacity: 0.6;
   cursor: default;
 }
+
+/* A sleeping free instance waking up is normal, not a failure. Red would tell
+   a first-time visitor the app is broken during the one minute it is doing
+   exactly what it is supposed to, so this variant is stated in the product's
+   own violet and reads as a status line. */
+.backend-banner.waking {
+  border-color: rgba(167, 139, 250, 0.28);
+  background: rgba(167, 139, 250, 0.08);
+  color: #c4b5fd;
+}
+
+.backend-banner.waking .backend-copy strong {
+  color: #ddd6fe;
+}

@@ -3,6 +3,16 @@ import axios from "axios";
 const API_URL =
   import.meta.env.VITE_API_URL?.replace(/\/$/, "") || "http://127.0.0.1:8000";
 
+/**
+ * Whether we are talking to a deployed API rather than one on this machine.
+ *
+ * The two failure modes need different words. Locally, an unreachable API means
+ * the developer has not started it, and the fix is a command. Deployed, it
+ * almost always means the free instance has gone to sleep and is waking up —
+ * telling a visitor to run a shell script would be nonsense.
+ */
+export const IS_HOSTED = !/^https?:\/\/(localhost|127\.0\.0\.1)/.test(API_URL);
+
 const api = axios.create({
   baseURL: API_URL,
   // Transcribing an hour of audio is slow, and a cold hosted backend is slower.
@@ -79,6 +89,11 @@ export async function fetchPrices(ticker, callDate) {
 }
 
 export async function health() {
-  const { data } = await api.get("/health");
+  // A shorter timeout than the shared one on purpose. The 5-minute default
+  // exists for transcription; a health check that hangs for five minutes is
+  // indistinguishable from a dead page. A free Render instance takes 30–60s to
+  // wake, so 75s is long enough to survive a cold start and short enough to
+  // actually report failure.
+  const { data } = await api.get("/health", { timeout: 75000 });
   return data;
 }

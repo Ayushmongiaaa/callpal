@@ -41,7 +41,7 @@ export default function App() {
 
   // Watches the API and clears itself when it comes back, so a backend that
   // died while the tab was open no longer needs a manual reload.
-  const { online, checking, retry } = useBackend();
+  const { online, waking, checking, retry } = useBackend();
 
   // Opening a stored call always drops you back on the dashboard, which is
   // the only page that renders a full analysis.
@@ -117,7 +117,12 @@ export default function App() {
         <Sidebar activePage={activePage} onChange={setActivePage} />
 
         <main className="main">
-          <BackendBanner online={online} checking={checking} onRetry={retry} />
+          <BackendBanner
+            online={online}
+            waking={waking}
+            checking={checking}
+            onRetry={retry}
+          />
 
           <Topbar
             onPickCompany={(symbol) => {

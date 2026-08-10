@@ -1,15 +1,37 @@
 import React from "react";
 import { ArrowClockwise, CloudSlash, SpinnerGap } from "@phosphor-icons/react";
+import { IS_HOSTED } from "../services/api";
 
 /**
- * Shown only while the API is unreachable.
+ * Shown only while the API is unreachable or still waking.
  *
- * It says the one command that fixes it and offers a retry, rather than
- * leaving a dead error in the upload card with no way forward. It clears
- * itself as soon as the API answers — no page reload needed.
+ * The wording depends on where the app is running, because the two situations
+ * are not the same problem. On this machine, an unreachable API means it was
+ * never started, and the fix is a command. On the deployed site, it almost
+ * always means the free instance has gone to sleep after inactivity and is
+ * spinning back up — telling a visitor to run `./dev.sh` would be meaningless
+ * and would make a working site look broken.
  */
 
-export default function BackendBanner({ online, checking, onRetry }) {
+export default function BackendBanner({ online, waking, checking, onRetry }) {
+  // Waking takes precedence: the API has not answered yet, but nothing is
+  // wrong, so this must not be dressed as an error.
+  if (waking && online) {
+    return (
+      <div className="backend-banner waking" role="status">
+        <SpinnerGap size={17} weight="bold" className="spin-icon" />
+
+        <div className="backend-copy">
+          <strong>Waking the server up.</strong>
+          <span>
+            The free host sleeps after inactivity. First load takes up to a
+            minute — after that it is quick.
+          </span>
+        </div>
+      </div>
+    );
+  }
+
   if (online) return null;
 
   return (
@@ -19,8 +41,17 @@ export default function BackendBanner({ online, checking, onRetry }) {
       <div className="backend-copy">
         <strong>The CallPal API is not responding.</strong>
         <span>
-          Start it with <code>./dev.sh</code> in the project folder. This will
-          clear on its own once it is up.
+          {IS_HOSTED ? (
+            <>
+              The free host may still be waking from sleep. Give it a moment and
+              retry — this clears on its own once it answers.
+            </>
+          ) : (
+            <>
+              Start it with <code>./dev.sh</code> in the project folder. This
+              will clear on its own once it is up.
+            </>
+          )}
         </span>
       </div>
 
