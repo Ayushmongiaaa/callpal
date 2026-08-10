@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import ChartMarker from "./ChartMarker";
 import {
   Area,
   CartesianGrid,
@@ -38,45 +39,6 @@ function ToneTip({ active, payload }) {
       </div>
       {row.note && <div className="tip-note">{row.note}</div>}
     </div>
-  );
-}
-
-/**
- * The marker on the line where prepared remarks end and Q&A begins.
- *
- * This was plain text positioned above the plot, which put it in an 8px margin
- * — so it was sliced in half and sat directly on the 100 gridline, unreadable.
- * A filled pill reads at a glance and cannot be confused with the grid, and the
- * chart now reserves the room it needs above the plot.
- */
-function QaMarker({ viewBox }) {
-  if (!viewBox) return null;
-
-  const W = 32;
-  const H = 16;
-
-  // Centre the pill on the line, but keep it inside the plot at either edge.
-  const left = Math.max(
-    viewBox.x - W / 2,
-    Math.min(viewBox.x - W / 2, viewBox.x + viewBox.width - W),
-  );
-
-  return (
-    <g transform={`translate(${left}, ${Math.max(2, viewBox.y - H - 5)})`}>
-      <rect width={W} height={H} rx={5} fill="#a78bfa" />
-      <text
-        x={W / 2}
-        y={H / 2 + 0.5}
-        textAnchor="middle"
-        dominantBaseline="middle"
-        fontSize="9.5"
-        fontWeight="700"
-        letterSpacing="0.2"
-        fill="#17131f"
-      >
-        Q&amp;A
-      </text>
-    </g>
   );
 }
 
@@ -237,7 +199,7 @@ export default function SentimentChart({ timeline = [], isDemo, prices, ticker }
                     x={toneData[qaStart].label}
                     stroke="rgba(167,139,250,0.55)"
                     strokeDasharray="3 3"
-                    label={<QaMarker />}
+                    label={<ChartMarker text="Q&A" />}
                   />
                 )}
 

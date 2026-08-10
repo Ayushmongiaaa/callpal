@@ -1,4 +1,5 @@
 import React from "react";
+import ChartMarker from "./ChartMarker";
 import {
   Bar,
   CartesianGrid,
@@ -114,7 +115,9 @@ export default function CandleChart({ series, callDate }) {
 
   return (
     <ResponsiveContainer width="100%" height="100%">
-      <ComposedChart data={data} margin={{ top: 10, right: 8, left: 0, bottom: 0 }}>
+      {/* top: 26 reserves the band the call marker is drawn into. At the old
+          value of 10 the label was clipped in half. */}
+      <ComposedChart data={data} margin={{ top: 26, right: 8, left: 0, bottom: 0 }}>
         <CartesianGrid
           stroke="rgba(167,139,250,0.08)"
           strokeDasharray="3 3"
@@ -150,13 +153,7 @@ export default function CandleChart({ series, callDate }) {
             stroke="#c4b5fd"
             strokeDasharray="4 4"
             strokeWidth={1.2}
-            label={{
-              value: "Call",
-              position: "top",
-              fill: "#c4b5fd",
-              fontSize: 10,
-              fontWeight: 700,
-            }}
+            label={<ChartMarker text="Call" />}
           />
         )}
 

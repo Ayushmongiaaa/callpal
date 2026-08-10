@@ -98,9 +98,9 @@ export default function Walkthrough({ delay = 4000 }) {
   const [step, setStep] = useState(0);
   const [rect, setRect] = useState(null);
 
-  // The spotlight only animates while moving between steps. During a scroll it
-  // must track the target exactly, and a transition would make it lag behind.
-  const [moving, setMoving] = useState(false);
+  // Whether the spotlight is settled at its destination and safe to show.
+  // Nothing is drawn while a step change is in flight, so there is no travel.
+  const [shown, setShown] = useState(false);
 
   // Runs on every page load rather than once per session.
   //
@@ -114,18 +114,19 @@ export default function Walkthrough({ delay = 4000 }) {
     return () => clearTimeout(timer);
   }, [delay]);
 
-  const measure = useCallback(() => {
-    const el = document.querySelector(STEPS[step].target);
-
-    if (!el) {
-      setRect(null);
-      return;
-    }
-
-    const r = el.getBoundingClientRect();
-    setRect({ top: r.top, left: r.left, width: r.width, height: r.height });
-  }, [step]);
-
+  /**
+   * Place the spotlight on the current step's element.
+   *
+   * The rule here is that the spotlight never travels. Previously it
+   * interpolated between the old and new positions, which sent it swooping
+   * diagonally across the page on a big jump; and during a scroll it tracked
+   * the element every frame, so it rode along with the moving page and looked
+   * like it wandered somewhere wrong before arriving.
+   *
+   * Now it fades out, the page scrolls with nothing drawn on it, and it fades
+   * back in already at its destination. Only opacity animates. There is no path
+   * to watch, so there is nothing to jitter.
+   */
   useLayoutEffect(() => {
     if (!open) return undefined;
 
@@ -136,64 +137,87 @@ export default function Walkthrough({ delay = 4000 }) {
       return undefined;
     }
 
+    let cancelled = false;
+    let frame = 0;
+    let timer = 0;
+
+    setShown(false);
+
+    const place = () => {
+      if (cancelled) return;
+      const r = el.getBoundingClientRect();
+      setRect({ top: r.top, left: r.left, width: r.width, height: r.height });
+      setShown(true);
+    };
+
     const box = el.getBoundingClientRect();
     const needsScroll = box.top < 80 || box.bottom > window.innerHeight - 80;
 
-    let frame = 0;
-    let deadline = 0;
-    let lastTop = null;
-    let stillFor = 0;
-
-    /**
-     * Follow the target every frame until it stops moving.
-     *
-     * A single measurement after scrollIntoView is not enough here. The chat
-     * rail and the sidebar are `position: sticky`, so their position in the
-     * viewport keeps changing as the page scrolls — they slide, then stick.
-     * Steps 5 and 6 land on exactly those, which is why those two jittered:
-     * the spotlight was chasing a target that was still moving.
-     */
-    const follow = () => {
-      const r = el.getBoundingClientRect();
-      setRect({ top: r.top, left: r.left, width: r.width, height: r.height });
-
-      stillFor = lastTop !== null && Math.abs(r.top - lastTop) < 0.5 ? stillFor + 1 : 0;
-      lastTop = r.top;
-
-      // Three consecutive identical frames means the scroll has finished.
-      // The deadline is a backstop for browsers that never quite settle.
-      frame = stillFor < 3 && performance.now() < deadline
-        ? requestAnimationFrame(follow)
-        : 0;
-    };
-
     if (needsScroll) {
-      // No glide while scrolling. The transition interpolates toward wherever
-      // the target was last frame, and interpolating toward a moving target is
-      // what produced the visible stutter. During a scroll the hole has to sit
-      // exactly on the element, every frame.
-      setMoving(false);
       el.scrollIntoView({ block: "center", behavior: "smooth" });
 
-      deadline = performance.now() + 1400;
-      frame = requestAnimationFrame(follow);
+      // Wait for the scroll to finish before measuring even once. The rail and
+      // the sidebar are `position: sticky`, so they keep moving until the page
+      // stops — measuring early is what put the spotlight in the wrong place.
+      const deadline = performance.now() + 1600;
+      let lastTop = null;
+      let stillFor = 0;
+
+      const settled = () => {
+        if (cancelled) return;
+
+        const r = el.getBoundingClientRect();
+        stillFor = lastTop !== null && Math.abs(r.top - lastTop) < 0.5 ? stillFor + 1 : 0;
+        lastTop = r.top;
+
+        if (stillFor >= 3 || performance.now() > deadline) {
+          place();
+          return;
+        }
+
+        frame = requestAnimationFrame(settled);
+      };
+
+      frame = requestAnimationFrame(settled);
     } else {
-      // Already on screen: nothing is moving, so the spotlight can glide
-      // across to its new position.
-      setMoving(true);
-      measure();
+      // Already on screen: nothing needs to move, so just long enough for the
+      // fade-out to register before it reappears in its new place.
+      timer = setTimeout(place, 120);
     }
 
-    const settle = setTimeout(() => setMoving(false), needsScroll ? 0 : 520);
+    return () => {
+      cancelled = true;
+      if (frame) cancelAnimationFrame(frame);
+      clearTimeout(timer);
+    };
+  }, [open, step]);
 
-    window.addEventListener("resize", measure);
+  /**
+   * Keep the hole glued to its element if the user scrolls or resizes by hand.
+   *
+   * This runs only once the spotlight is settled and visible, and it writes the
+   * position with no transition, so it tracks exactly rather than lagging
+   * behind — the user is driving, so following is correct here.
+   */
+  useEffect(() => {
+    if (!open || !shown) return undefined;
+
+    const el = document.querySelector(STEPS[step].target);
+    if (!el) return undefined;
+
+    const sync = () => {
+      const r = el.getBoundingClientRect();
+      setRect({ top: r.top, left: r.left, width: r.width, height: r.height });
+    };
+
+    window.addEventListener("scroll", sync, true);
+    window.addEventListener("resize", sync);
 
     return () => {
-      if (frame) cancelAnimationFrame(frame);
-      clearTimeout(settle);
-      window.removeEventListener("resize", measure);
+      window.removeEventListener("scroll", sync, true);
+      window.removeEventListener("resize", sync);
     };
-  }, [open, step, measure]);
+  }, [open, shown, step]);
 
   const close = useCallback(() => {
     setOpen(false);
@@ -249,9 +273,11 @@ export default function Walkthrough({ delay = 4000 }) {
 
   return (
     <div className="tour">
-      {rect ? (
+      {/* While a step change is in flight the page keeps its plain dim, so the
+          screen never goes bright and nothing is seen sliding across it. */}
+      {rect && shown ? (
         <div
-          className={`tour-hole ${moving ? "gliding" : ""}`}
+          className="tour-hole"
           style={{
             top: rect.top - PAD,
             left: rect.left - PAD,
@@ -265,8 +291,8 @@ export default function Walkthrough({ delay = 4000 }) {
       )}
 
       <div
-        className={`tour-card ${moving ? "gliding" : ""}`}
-        style={rect ? cardStyle : undefined}
+        className={`tour-card ${shown ? "shown" : ""}`}
+        style={rect && shown ? cardStyle : undefined}
         role="dialog"
         aria-label="CallPal walkthrough"
       >

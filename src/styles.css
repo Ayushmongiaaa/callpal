@@ -1919,11 +1919,10 @@ body {
     0 0 0 9999px rgba(4, 1, 12, 0.8),
     0 0 0 2px rgba(196, 181, 253, 0.9),
     0 0 34px rgba(139, 92, 246, 0.65);
-  transition:
-    top 0.32s cubic-bezier(0.4, 0, 0.2, 1),
-    left 0.32s cubic-bezier(0.4, 0, 0.2, 1),
-    width 0.32s cubic-bezier(0.4, 0, 0.2, 1),
-    height 0.32s cubic-bezier(0.4, 0, 0.2, 1);
+  /* No positional transition. The spotlight is placed where it belongs and
+     revealed there; see the opacity-only rule further down. Leaving a dead
+     top/left transition here would only be waiting to be re-enabled by
+     accident. */
   pointer-events: auto;
 }
 
@@ -1949,10 +1948,9 @@ body {
   box-shadow:
     0 1px 0 rgba(255, 255, 255, 0.9) inset,
     0 24px 60px rgba(3, 1, 10, 0.7);
-  animation: tourCardIn 0.3s cubic-bezier(0.2, 0.9, 0.3, 1.15) both;
-  transition:
-    top 0.32s cubic-bezier(0.4, 0, 0.2, 1),
-    left 0.32s cubic-bezier(0.4, 0, 0.2, 1);
+  /* The card is placed with the spotlight and fades in with it. It used to
+     slide between steps, which meant it crossed the screen alongside the hole
+     and doubled the sense of things flying around. */
 }
 
 @keyframes tourCardIn {
@@ -2646,13 +2644,36 @@ button.view-all:hover {
 /* The spotlight glides between steps instead of snapping. The class is only
    applied while a step change is in flight — during a scroll the hole has to
    track its target frame for frame. */
-.tour-hole.gliding,
-.tour-card.gliding {
-  transition:
-    top 0.44s cubic-bezier(0.32, 0.72, 0, 1),
-    left 0.44s cubic-bezier(0.32, 0.72, 0, 1),
-    width 0.44s cubic-bezier(0.32, 0.72, 0, 1),
-    height 0.44s cubic-bezier(0.32, 0.72, 0, 1);
+/* Position is never animated.
+ *
+ * Interpolating top/left/width/height is what made the spotlight swoop across
+ * the page and appear to visit places it had no business being. It is now
+ * placed at its destination and revealed there; only opacity moves. These
+ * overrides come after the earlier rules on purpose. */
+.tour-hole,
+.tour-card {
+  transition: opacity 0.18s ease;
+}
+
+.tour-card {
+  opacity: 0;
+}
+
+.tour-card.shown {
+  opacity: 1;
+}
+
+.tour-hole {
+  animation: tourHoleIn 0.2s ease both;
+}
+
+@keyframes tourHoleIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
 }
 
 .tour-copy {
@@ -2671,11 +2692,16 @@ button.view-all:hover {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .tour-hole.gliding,
-  .tour-card.gliding,
+  .tour-hole,
+  .tour-card,
   .tour-copy {
     transition: none;
     animation: none;
+  }
+
+  /* Without the fade, the card must still be visible once placed. */
+  .tour-card {
+    opacity: 1;
   }
 }
 
