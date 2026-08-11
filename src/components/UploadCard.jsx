@@ -6,6 +6,28 @@ const formats = ["PDF", "DOCX", "TXT", "MP3", "WAV", "M4A", "MP4", "MOV"];
 
 const MEDIA = /\.(mp3|wav|m4a|aac|ogg|flac|mp4|mov|webm)$/i;
 
+/**
+ * A filename fit to show someone.
+ *
+ * Dropping a link gives us a URL, not a filename, and printing the whole thing
+ * — protocol, host, query string — looks like a bug. Take the last path
+ * segment, drop the query, and fall back to the host if the path is empty.
+ */
+function prettyName(raw) {
+  const name = String(raw || "").trim();
+
+  if (!/^https?:/i.test(name) && !name.includes("/")) return name;
+
+  try {
+    const url = new URL(name.replace(/^https?:/i, (m) => m.toLowerCase()));
+    const last = url.pathname.split("/").filter(Boolean).pop();
+    return last ? decodeURIComponent(last) : url.hostname;
+  } catch {
+    const last = name.split(/[/\\]/).filter(Boolean).pop() || name;
+    return last.split("?")[0];
+  }
+}
+
 function humanSize(bytes) {
   if (!bytes && bytes !== 0) return "";
   if (bytes < 1024) return `${bytes} B`;
@@ -68,7 +90,7 @@ export default function UploadCard({ onFile, status, error }) {
   // is what proves the click registered. Without it the card looked identical
   // busy or idle, so an upload felt like nothing had happened.
   function send(file) {
-    setPicked({ name: file.name, size: file.size });
+    setPicked({ name: prettyName(file.name), size: file.size });
     setElapsed(0);
     setAt(0);
     onFile(file);

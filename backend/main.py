@@ -22,6 +22,7 @@ import uuid
 from dotenv import load_dotenv
 from fastapi import FastAPI, File, HTTPException, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
+from starlette.concurrency import run_in_threadpool
 from pydantic import BaseModel
 
 load_dotenv()
@@ -97,6 +98,18 @@ def health():
 
 @app.post("/analyze")
 async def analyze(file: UploadFile = File(...)):
+    """Read the upload, then hand the slow part to a worker thread.
+
+    This endpoint has to be `async` because reading an upload is awaited, but
+    everything after that — transcription, PDF parsing, the model call — is
+    ordinary blocking code. Running it inline held the event loop for the whole
+    analysis, which on a single-worker instance means the server answers nothing
+    else for a minute: `/health` times out and the app tells the user the API is
+    down *while it is busy serving them*.
+
+    `run_in_threadpool` is what FastAPI already does for plain `def` endpoints;
+    this just applies it to the blocking half of an async one.
+    """
     raw = await file.read()
     name = file.filename or "upload.txt"
 
@@ -109,6 +122,10 @@ async def analyze(file: UploadFile = File(...)):
             detail=f"That file is larger than the {MAX_MB}MB limit.",
         )
 
+    return await run_in_threadpool(_analyze_upload, name, raw)
+
+
+def _analyze_upload(name: str, raw: bytes) -> dict:
     source = "transcript"
 
     # Audio and video are transcribed first, then follow the identical path as
