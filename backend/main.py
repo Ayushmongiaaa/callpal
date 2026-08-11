@@ -245,6 +245,79 @@ def stats():
     return store.stats()
 
 
+@app.get("/notifications")
+def notifications():
+    """What the bell shows: what is coming up, and what was found.
+
+    Two sources, both real. Upcoming reporting dates come from the provider's
+    earnings calendar, limited to tickers this user has actually analyzed —
+    a feed of every company on the market is noise, not a notification. The
+    rest is drawn from the stored calls: risks flagged, and guidance cut.
+
+    The calendar is best-effort. If the provider is out of quota or has no key,
+    that section is simply absent rather than the whole endpoint failing.
+    """
+    library = store.recent(limit=60)
+
+    tickers = [c["ticker"] for c in library if c.get("ticker")]
+    upcoming = discover.upcoming(tickers) if discover.configured() else []
+
+    items = []
+
+    for row in upcoming:
+        days = row["days_away"]
+
+        if days == 0:
+            when = "reports today"
+        elif days == 1:
+            when = "reports tomorrow"
+        else:
+            when = f"reports in {days} days"
+
+        items.append(
+            {
+                "kind": "upcoming",
+                "title": f"{row['symbol']} {when}",
+                "detail": row["name"] or "",
+                "date": row["date"],
+                "call_id": None,
+            }
+        )
+
+    # Guidance being cut is the single most consequential thing on a call, so it
+    # outranks individual risk flags.
+    for call in library:
+        if (call.get("guidance") or "").lower() == "lowered":
+            items.append(
+                {
+                    "kind": "guidance",
+                    "title": f"{call.get('ticker') or call.get('company')} lowered guidance",
+                    "detail": call.get("guidance_summary") or call.get("quarter") or "",
+                    "date": call.get("call_date") or "",
+                    "call_id": call["id"],
+                }
+            )
+
+    for call in library:
+        for risk in (call.get("risk_flags") or [])[:3]:
+            items.append(
+                {
+                    "kind": "risk",
+                    "title": risk,
+                    "detail": f"{call.get('ticker') or call.get('company')}"
+                    f"{' · ' + call['quarter'] if call.get('quarter') else ''}",
+                    "date": call.get("call_date") or "",
+                    "call_id": call["id"],
+                }
+            )
+
+    return {
+        "items": items[:14],
+        "count": len(items),
+        "upcoming_available": bool(upcoming),
+    }
+
+
 @app.get("/search")
 def search(q: str):
     """Company lookup for the search bar."""

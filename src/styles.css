@@ -1632,6 +1632,156 @@ body {
   font-style: italic;
 }
 
+/* ---------- notification panel ---------- */
+
+/* Portalled to <body> for the same reason as the quote popover: the topbar is
+   inside a blurred ancestor, and `backdrop-filter` creates a stacking context
+   that traps fixed-position children however high their z-index. */
+.note-panel {
+  position: fixed;
+  z-index: 56;
+  max-height: min(520px, 70vh);
+  overflow-y: auto;
+  padding: 6px;
+  border-radius: var(--r-md);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(23, 19, 33, 0.97);
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.66);
+  backdrop-filter: blur(16px);
+  opacity: 0;
+  pointer-events: none;
+}
+
+.note-panel.placed {
+  opacity: 1;
+  pointer-events: auto;
+  animation: quotePop 0.16s cubic-bezier(0.32, 0.72, 0, 1) both;
+}
+
+.note-head {
+  display: flex;
+  align-items: center;
+  padding: 8px 10px 10px;
+  font-size: 12.5px;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.note-head button {
+  margin-left: auto;
+  border: 0;
+  background: none;
+  color: #a78bfa;
+  font: inherit;
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.note-head button:hover {
+  text-decoration: underline;
+}
+
+.note-group {
+  padding: 8px 10px 5px;
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--subtle);
+}
+
+.note-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 9px;
+  width: 100%;
+  padding: 9px 10px;
+  border: 0;
+  border-radius: var(--r-sm);
+  background: none;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.note-row:disabled {
+  cursor: default;
+}
+
+.note-row:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.055);
+}
+
+.note-icon {
+  display: inline-flex;
+  flex: none;
+  padding: 5px;
+  border-radius: var(--r-xs);
+  background: rgba(167, 139, 250, 0.14);
+  color: #c4b5fd;
+}
+
+.note-row.risk .note-icon {
+  background: rgba(251, 191, 36, 0.14);
+  color: #fcd34d;
+}
+
+.note-row.guidance .note-icon {
+  background: rgba(248, 113, 113, 0.14);
+  color: #fca5a5;
+}
+
+.note-text {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+
+.note-text strong {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text);
+  line-height: 1.35;
+}
+
+.note-text span {
+  font-size: 10.5px;
+  color: var(--muted);
+  line-height: 1.4;
+}
+
+.note-go {
+  margin-left: auto;
+  align-self: center;
+  flex: none;
+  color: var(--subtle);
+}
+
+.note-empty,
+.note-foot {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 14px 10px;
+  font-size: 11px;
+  color: var(--muted);
+  line-height: 1.5;
+}
+
+.note-foot {
+  margin-top: 4px;
+  padding: 9px 10px;
+  border-top: 1px solid rgba(255, 255, 255, 0.07);
+  font-size: 10px;
+  color: var(--subtle);
+}
+
+.icon-btn.on {
+  background: rgba(167, 139, 250, 0.16);
+  color: #ddd6fe;
+}
+
 /* ---------- source quote popover ---------- */
 
 /* Fixed, not absolute: the quote is lifted out of the layout entirely so that

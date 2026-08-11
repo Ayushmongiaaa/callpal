@@ -132,6 +132,7 @@ export default function App() {
             busy={status === "fetching" || status === "analyzing"}
             alertCount={library.reduce((n, c) => n + (c.risk_count ?? 0), 0)}
             onOpenAlerts={() => setActivePage("Alerts")}
+            onOpenCall={open}
           />
           {/* Keyed on the page name so React swaps the subtree cleanly and the
               entrance animation replays on each switch. */}

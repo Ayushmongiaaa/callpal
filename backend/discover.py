@@ -252,3 +252,103 @@ def latest_transcript(symbol: str, tries: int = 4) -> dict:
         f"No published transcript found for {symbol} in the last {tries} "
         "quarters. Upload the transcript directly instead."
     )
+
+
+# The earnings calendar is the one endpoint here that answers in CSV rather
+# than JSON, so it cannot go through _get.
+_calendar_cache: tuple[float, list[dict]] | None = None
+CALENDAR_TTL = 60 * 60 * 6
+
+
+def _fetch_calendar(horizon: str = "3month") -> list[dict]:
+    """Upcoming reporting dates for the whole market, cached hard.
+
+    One request covers every ticker, so this is fetched whole and filtered
+    locally rather than asked per symbol — 25 requests a day does not survive a
+    request per company. The payload is a few MB and changes slowly, hence the
+    six-hour cache.
+    """
+    global _calendar_cache
+
+    if _calendar_cache and time.time() - _calendar_cache[0] < CALENDAR_TTL:
+        return _calendar_cache[1]
+
+    import csv
+    import io
+
+    params = {"function": "EARNINGS_CALENDAR", "horizon": horizon, "apikey": _key()}
+    url = f"{BASE}?{urllib.parse.urlencode(params)}"
+
+    with urllib.request.urlopen(url, timeout=TIMEOUT) as response:
+        body = response.read().decode("utf-8", errors="replace")
+
+    # Out of quota comes back as JSON even from the CSV endpoint.
+    if body.lstrip().startswith("{"):
+        raise RateLimited(
+            "The free Alpha Vantage tier allows about 25 requests a day and "
+            "that is used up for now."
+        )
+
+    rows = []
+    for row in csv.DictReader(io.StringIO(body)):
+        symbol = (row.get("symbol") or "").strip().upper()
+        date = (row.get("reportDate") or "").strip()
+
+        if not symbol or not re.fullmatch(r"\d{4}-\d{2}-\d{2}", date):
+            continue
+
+        rows.append({"symbol": symbol, "name": (row.get("name") or "").strip(), "date": date})
+
+    _calendar_cache = (time.time(), rows)
+    return rows
+
+
+def upcoming(symbols: list[str], within_days: int = 45, limit: int = 6) -> list[dict]:
+    """The next reporting dates for the tickers the user actually cares about.
+
+    Returns [] rather than raising when the calendar is unavailable: a bell that
+    silently has less in it is fine, a bell that errors is not.
+    """
+    import datetime
+
+    wanted = {s.strip().upper() for s in symbols if s and s.strip()}
+
+    if not wanted:
+        return []
+
+    try:
+        rows = _fetch_calendar()
+    except (NoKey, RateLimited, NotAvailable, OSError, ValueError):
+        return []
+
+    today = datetime.date.today()
+    out = []
+
+    for row in rows:
+        if row["symbol"] not in wanted:
+            continue
+
+        try:
+            when = datetime.date.fromisoformat(row["date"])
+        except ValueError:
+            continue
+
+        days = (when - today).days
+        if days < 0 or days > within_days:
+            continue
+
+        out.append({**row, "days_away": days})
+
+    # Soonest first, and only one entry per company — a ticker can appear twice
+    # when a provisional date is followed by a confirmed one.
+    out.sort(key=lambda r: r["days_away"])
+
+    seen = set()
+    unique = []
+    for row in out:
+        if row["symbol"] in seen:
+            continue
+        seen.add(row["symbol"])
+        unique.append(row)
+
+    return unique[:limit]

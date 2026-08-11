@@ -88,6 +88,11 @@ export async function fetchPrices(ticker, callDate) {
   }
 }
 
+export async function notifications() {
+  const { data } = await api.get("/notifications", { timeout: 30000 });
+  return data;
+}
+
 export async function health() {
   // A shorter timeout than the shared one on purpose. The 5-minute default
   // exists for transcription; a health check that hangs for five minutes is
