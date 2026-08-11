@@ -160,7 +160,7 @@ export default function Walkthrough({ delay = 4000 }) {
       finished = true;
 
       const r = el.getBoundingClientRect();
-      setRect({ top: r.top, left: r.left, width: r.width, height: r.height });
+      setRect({ top: r.top, left: r.left, width: r.width, height: r.height, step });
       setShown(true);
 
       // Stay locked until the glide itself has finished. Releasing the moment
@@ -270,7 +270,7 @@ export default function Walkthrough({ delay = 4000 }) {
     const sync = () => {
       if (settling.current) return;
       const r = el.getBoundingClientRect();
-      setRect({ top: r.top, left: r.left, width: r.width, height: r.height });
+      setRect({ top: r.top, left: r.left, width: r.width, height: r.height, step });
     };
 
     window.addEventListener("scroll", sync, true);
@@ -306,6 +306,13 @@ export default function Walkthrough({ delay = 4000 }) {
   const last = step === STEPS.length - 1;
 
   // Place the card next to the hole, flipping side when it would run off-screen.
+  //
+  // The side comes from `rect.step`, not from the step being navigated to.
+  // `step` changes the instant Next is pressed, but `rect` is deliberately held
+  // until the scroll finishes — so reading the new step's preferred side against
+  // the old rectangle sent the card to a meaningless position for a moment
+  // before it moved again. Both halves of the placement now come from the same
+  // measurement, so the card moves exactly once.
   let cardStyle = {};
 
   if (rect) {
@@ -313,7 +320,7 @@ export default function Walkthrough({ delay = 4000 }) {
     const vw = window.innerWidth;
     const vh = window.innerHeight;
 
-    let place = current.place;
+    let place = (STEPS[rect.step] ?? current).place;
     if (place === "right" && left + width + CARD_W + 40 > vw) place = "left";
     if (place === "left" && left - CARD_W - 40 < 0) place = "right";
 
