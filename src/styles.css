@@ -488,6 +488,8 @@ body {
 }
 
 .upload-icon {
+  /* positioned so the completion ring can be drawn against it */
+  position: relative;
   width: 52px;
   height: 52px;
   display: grid;
@@ -6241,4 +6243,87 @@ button.alert-row:hover,
 .upload-card.busy {
   border-color: rgba(167, 139, 250, 0.3);
   background: rgba(167, 139, 250, 0.045);
+}
+
+/* ---------- the finish ---------- */
+
+/* Completing a run was as visually quiet as starting one: the label changed and
+   nothing else. A single, quick flourish marks the moment without turning it
+   into a fireworks display — it fires once and settles. */
+.upload-icon.done {
+  color: var(--green);
+  animation: doneIn 0.5s cubic-bezier(0.2, 0.9, 0.25, 1.2) both;
+}
+
+@keyframes doneIn {
+  0% {
+    transform: scale(0.6) rotate(-12deg);
+    opacity: 0;
+  }
+  55% {
+    transform: scale(1.12) rotate(2deg);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1) rotate(0);
+  }
+}
+
+/* A ring that expands away from the tick, once. */
+.upload-icon.done::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  border: 2px solid var(--green);
+  animation: doneRing 0.85s cubic-bezier(0.2, 0.8, 0.3, 1) both;
+  pointer-events: none;
+}
+
+@keyframes doneRing {
+  from {
+    transform: scale(0.85);
+    opacity: 0.75;
+  }
+  to {
+    transform: scale(1.9);
+    opacity: 0;
+  }
+}
+
+/* When the last stage ticks over, the whole panel confirms rather than just
+   the final row. */
+.upload-progress:has(.up-stages li:last-child.done) {
+  border-color: rgba(52, 211, 153, 0.3);
+  background: rgba(52, 211, 153, 0.06);
+}
+
+/* The numbers arriving is the actual payoff — the answer you waited for. They
+   rise into place in sequence rather than all appearing at once. */
+.metrics .metric {
+  animation: metricIn 0.44s cubic-bezier(0.32, 0.72, 0, 1) both;
+}
+
+.metrics .metric:nth-child(1) { animation-delay: 0.02s; }
+.metrics .metric:nth-child(2) { animation-delay: 0.08s; }
+.metrics .metric:nth-child(3) { animation-delay: 0.14s; }
+.metrics .metric:nth-child(4) { animation-delay: 0.2s; }
+
+@keyframes metricIn {
+  from {
+    opacity: 0;
+    transform: translateY(7px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .upload-icon.done,
+  .upload-icon.done::after,
+  .metrics .metric {
+    animation: none;
+  }
 }

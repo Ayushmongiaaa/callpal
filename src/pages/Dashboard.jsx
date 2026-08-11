@@ -60,7 +60,7 @@ export default function Dashboard({
 
       <section className="hero-grid">
         <UploadCard onFile={onFile} status={status} error={error} />
-        <FeaturedCall call={call} onViewFull={onViewFull} />
+        <FeaturedCall call={call} prices={prices} onViewFull={onViewFull} />
       </section>
 
       <section className="metrics">

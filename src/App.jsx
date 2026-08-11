@@ -71,7 +71,13 @@ export default function App() {
       case "Compare":
         return <ComparePage loaded={libraryLoaded} library={library} onOpen={open} />;
       case "Analysis":
-        return <FullAnalysis call={call} onBack={() => setActivePage("Dashboard")} />;
+        return (
+          <FullAnalysis
+            call={call}
+            prices={prices}
+            onBack={() => setActivePage("Dashboard")}
+          />
+        );
       default:
         return (
           <Dashboard

@@ -7,9 +7,9 @@ import {
 } from "@phosphor-icons/react";
 import CompanyLogo from "./CompanyLogo";
 import GlassCubes from "./GlassCubes";
-import { downloadReport } from "../utils/report";
+import DownloadReport from "./DownloadReport";
 
-export default function FeaturedCall({ call, onViewFull }) {
+export default function FeaturedCall({ call, prices, onViewFull }) {
   // This used to scroll to the bottom of the dashboard, which is not a
   // different view — it is the same summary, further down. It opens the full
   // analysis page now.
@@ -58,20 +58,19 @@ export default function FeaturedCall({ call, onViewFull }) {
             <ArrowRight size={14} weight="bold" />
           </button>
 
-          <button
-            className="btn-ghost"
-            onClick={() => downloadReport(call)}
-            disabled={call.isDemo}
-            title={
-              call.isDemo
-                ? "Analyze a call to download its report"
-                : "Download this analysis as a Markdown file"
-            }
-            type="button"
-          >
-            Download Report
-            <DownloadSimple size={14} weight="bold" />
-          </button>
+          {call.isDemo ? (
+            <button
+              className="btn-ghost"
+              disabled
+              title="Analyze a call to download its report"
+              type="button"
+            >
+              Download Report
+              <DownloadSimple size={14} weight="bold" />
+            </button>
+          ) : (
+            <DownloadReport call={call} prices={prices} className="btn-ghost" />
+          )}
         </div>
       </div>
 

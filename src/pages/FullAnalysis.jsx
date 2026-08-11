@@ -15,7 +15,7 @@ import {
   Warning,
 } from "@phosphor-icons/react";
 import CompanyLogo from "../components/CompanyLogo";
-import { downloadReport } from "../utils/report";
+import DownloadReport from "../components/DownloadReport";
 
 /**
  * The whole analysis, on its own page.
@@ -85,7 +85,7 @@ function Evidence({ points, tone }) {
   );
 }
 
-export default function FullAnalysis({ call, onBack }) {
+export default function FullAnalysis({ call, prices, onBack }) {
   if (!call || call.isDemo) {
     return (
       <div className="fa-empty glass">
@@ -146,14 +146,7 @@ export default function FullAnalysis({ call, onBack }) {
             </div>
           </div>
 
-          <button
-            className="fa-download"
-            onClick={() => downloadReport(call)}
-            type="button"
-          >
-            <DownloadSimple size={13} weight="bold" />
-            Download report
-          </button>
+          <DownloadReport call={call} prices={prices} className="fa-download" />
         </div>
       </header>
 

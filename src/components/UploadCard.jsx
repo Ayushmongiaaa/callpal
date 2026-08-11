@@ -20,23 +20,28 @@ function humanSize(bytes) {
  * list out. A recording gains a transcription stage because it genuinely has
  * one; a PDF does not, and pretending otherwise would be a fake progress bar.
  */
-function stagesFor({ media, status }) {
-  const list = [{ key: "received", label: "File received" }];
+function stageList(media) {
+  return [
+    { key: "received", label: "File received" },
+    media
+      ? { key: "transcribing", label: "Transcribing the audio" }
+      : { key: "reading", label: "Extracting the text" },
+    { key: "analyzing", label: "Reading the call" },
+  ];
+}
 
-  if (media) {
-    list.push({ key: "transcribing", label: "Transcribing the audio" });
-  } else {
-    list.push({ key: "reading", label: "Extracting the text" });
-  }
-
-  list.push({ key: "analyzing", label: "Reading the call" });
-
+/** How far the pipeline has genuinely got. */
+function realIndex({ media, status }) {
+  if (status === "done") return 3;
   const order = ["received", media ? "transcribing" : "reading", "analyzing"];
-  const at = status === "done" ? order.length : order.indexOf(status);
+  const i = order.indexOf(status);
+  return i === -1 ? 0 : i;
+}
 
-  return list.map((s, i) => ({
+function stagesFor({ media, at }) {
+  return stageList(media).map((s, i) => ({
     ...s,
-    state: status === "done" || i < at ? "done" : i === at ? "active" : "waiting",
+    state: i < at ? "done" : i === at ? "active" : "waiting",
   }));
 }
 
@@ -65,6 +70,7 @@ export default function UploadCard({ onFile, status, error }) {
   function send(file) {
     setPicked({ name: file.name, size: file.size });
     setElapsed(0);
+    setAt(0);
     onFile(file);
   }
 
@@ -78,7 +84,26 @@ export default function UploadCard({ onFile, status, error }) {
   }, [busy]);
 
   const media = picked ? MEDIA.test(picked.name) : false;
-  const stages = stagesFor({ media, status });
+  const real = realIndex({ media, status });
+
+  // How far the *display* has got, which trails the pipeline rather than
+  // leading it.
+  //
+  // Pulling the text out of a 4KB transcript genuinely takes a few
+  // milliseconds, so every tick was already green on the first frame and there
+  // was no sequence to watch. Holding each stage for a moment makes the order
+  // legible. The direction matters: the display never claims a stage is done
+  // before it is — it only ever lags, so it under-claims rather than
+  // inventing progress that has not happened.
+  const [at, setAt] = useState(0);
+
+  useEffect(() => {
+    if (at >= real) return undefined;
+    const id = setTimeout(() => setAt((i) => Math.min(i + 1, real)), 560);
+    return () => clearTimeout(id);
+  }, [at, real]);
+
+  const stages = stagesFor({ media, at });
 
   async function handleDrop(event) {
     event.preventDefault();
@@ -132,7 +157,11 @@ export default function UploadCard({ onFile, status, error }) {
         }}
       />
 
-      <div className={`upload-icon ${busy ? "busy" : ""}`}>
+      <div
+        className={`upload-icon ${busy ? "busy" : ""} ${
+          status === "done" ? "done" : ""
+        }`}
+      >
         {busy ? (
           <Working size={26} />
         ) : status === "done" ? (
@@ -174,7 +203,7 @@ export default function UploadCard({ onFile, status, error }) {
           <Warning size={13} weight="fill" />
           <span>{error}</span>
         </div>
-      ) : busy && picked ? (
+      ) : picked && (busy || at < stages.length) ? (
         // The format chips are guidance for choosing a file. Once one is
         // chosen they are noise, and leaving them up is why a running upload
         // looked identical to an idle card.
@@ -202,9 +231,11 @@ export default function UploadCard({ onFile, status, error }) {
           </ul>
 
           <span className="up-elapsed">
-            {elapsed < 60
-              ? `${elapsed}s elapsed`
-              : `${Math.floor(elapsed / 60)}m ${elapsed % 60}s elapsed`}
+            {status === "done" && at >= stages.length
+              ? `Done in ${elapsed}s`
+              : elapsed < 60
+                ? `${elapsed}s elapsed`
+                : `${Math.floor(elapsed / 60)}m ${elapsed % 60}s elapsed`}
           </span>
         </div>
       ) : (
