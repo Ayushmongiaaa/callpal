@@ -503,11 +503,8 @@ body {
   box-shadow: 0 0 26px var(--violet-glow);
 }
 
-/* The busy state set this class but nothing ever defined it, so the spinner
-   sat perfectly still while the call was being analyzed. */
-.upload-icon.spin svg {
-  animation: spin 0.9s linear infinite;
-}
+/* The rotating spinner that used to live here is gone — see the waveform in
+   the working-indicator section. */
 
 .upload-card h3 {
   margin: 0;
@@ -774,9 +771,11 @@ body {
   );
   display: grid;
   place-items: center;
-  /* The cube is viewed from above, so the geometric centre of the front face
-     sits visually low. Lift the badge to compensate. */
-  padding-bottom: 12px;
+  /* The cube is viewed from above, so the front face is foreshortened and its
+     geometric centre reads slightly low. That was over-corrected with a 12px
+     lift, which pushed the badge visibly toward the top edge. A small nudge
+     down puts it back on the optical centre of the visible face. */
+  padding-top: 7px;
 }
 
 .face-right {
@@ -1630,6 +1629,70 @@ body {
 .take-group li.none {
   color: var(--subtle);
   font-style: italic;
+}
+
+/* ---------- working indicator ---------- */
+
+.working {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 2.5px;
+}
+
+.working i {
+  width: 3px;
+  height: 100%;
+  border-radius: 2px;
+  background: currentColor;
+  transform-origin: center;
+  /* Starts collapsed rather than full height, so the first frame is not a
+     solid block that then jumps. */
+  transform: scaleY(0.22);
+  animation-name: workingBar;
+  animation-timing-function: cubic-bezier(0.4, 0, 0.3, 1);
+  animation-iteration-count: infinite;
+  animation-direction: alternate;
+}
+
+@keyframes workingBar {
+  from {
+    transform: scaleY(0.22);
+    opacity: 0.55;
+  }
+  to {
+    transform: scaleY(var(--peak, 1));
+    opacity: 1;
+  }
+}
+
+/* A breathing halo under the bars. Slower than any bar, so the two never lock
+   into the same rhythm. */
+.upload-icon.busy {
+  position: relative;
+  animation: workingHalo 2.4s ease-in-out infinite;
+}
+
+@keyframes workingHalo {
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 rgba(167, 139, 250, 0.26);
+  }
+  50% {
+    box-shadow: 0 0 0 9px rgba(167, 139, 250, 0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .working i {
+    animation: none;
+    transform: scaleY(var(--peak, 1));
+    opacity: 0.85;
+  }
+
+  .upload-icon.busy {
+    animation: none;
+  }
 }
 
 /* ---------- notification panel ---------- */
@@ -5472,4 +5535,540 @@ button.alert-row:hover,
 
 .backend-banner.waking .backend-copy strong {
   color: #ddd6fe;
+}
+
+/* ---------- full analysis page ---------- */
+
+/* The dashboard is the summary; this is the document. It is deliberately a
+   single column at reading width rather than the dashboard's grid — long-form
+   content in wide columns is hard to read, and this page is meant to be read
+   rather than scanned. */
+.fa {
+  display: grid;
+  gap: 14px;
+  max-width: 880px;
+}
+
+.fa-top {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex-wrap: wrap;
+  padding: 16px 18px;
+}
+
+.fa-back,
+.fa-download {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 13px;
+  border-radius: var(--r-sm);
+  border: 1px solid var(--glass-border);
+  background: rgba(255, 255, 255, 0.05);
+  color: var(--text);
+  font: inherit;
+  font-size: 11.5px;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.fa-back:hover,
+.fa-download:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.fa-download {
+  margin-left: auto;
+  border-color: rgba(167, 139, 250, 0.36);
+  background: rgba(167, 139, 250, 0.14);
+  color: #ddd6fe;
+}
+
+.fa-id {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  min-width: 0;
+}
+
+.fa-logo {
+  display: inline-flex;
+  padding: 7px;
+  border-radius: var(--r-sm);
+  background: #fff;
+}
+
+.fa-id h1 {
+  margin: 0;
+  font-size: 19px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+.fa-id p {
+  margin: 2px 0 0;
+  font-size: 11.5px;
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.fa-lede {
+  margin: 0;
+  padding: 15px 18px;
+  font-size: 13px;
+  line-height: 1.65;
+  color: var(--text-dim);
+}
+
+.fa-strip {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 10px;
+}
+
+.fa-stat {
+  display: grid;
+  gap: 3px;
+  padding: 13px 14px;
+  border-radius: var(--r-md);
+  border: 1px solid var(--surface-line-soft);
+  background: rgba(150, 132, 200, 0.05);
+}
+
+.fa-stat > span {
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--subtle);
+}
+
+.fa-stat strong {
+  font-size: 22px;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  font-variant-numeric: tabular-nums;
+}
+
+.fa-stat strong.v {
+  color: #c4b5fd;
+}
+
+.fa-stat strong.sm {
+  font-size: 14px;
+  text-transform: capitalize;
+}
+
+.fa-stat strong.dim {
+  font-size: 14px;
+  color: var(--muted);
+}
+
+.fa-stat strong small {
+  font-size: 11px;
+  color: var(--subtle);
+  font-weight: 600;
+}
+
+.fa-stat em {
+  font-style: normal;
+  font-size: 10.5px;
+  color: var(--muted);
+}
+
+.fa-section {
+  padding: 17px 18px 18px;
+}
+
+.fa-head {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  margin-bottom: 13px;
+}
+
+.fa-head-icon {
+  display: inline-flex;
+  padding: 7px;
+  border-radius: var(--r-sm);
+  background: rgba(167, 139, 250, 0.13);
+  color: #c4b5fd;
+}
+
+.fa-head h3 {
+  margin: 0;
+  font-size: 13.5px;
+  font-weight: 700;
+}
+
+.fa-head p {
+  margin: 2px 0 0;
+  font-size: 11px;
+  color: var(--muted);
+}
+
+.fa-count {
+  margin-left: auto;
+  padding: 3px 9px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.07);
+  font-size: 10.5px;
+  font-weight: 700;
+  color: var(--muted);
+}
+
+.fa-body {
+  margin: 0;
+  font-size: 12.5px;
+  line-height: 1.7;
+  color: var(--text-dim);
+}
+
+.fa-sub {
+  margin: 15px 0 8px;
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--subtle);
+}
+
+.fa-list {
+  margin: 0;
+  padding-left: 17px;
+  display: grid;
+  gap: 6px;
+  font-size: 12.5px;
+  line-height: 1.6;
+  color: var(--text-dim);
+}
+
+.fa-list.risks li::marker {
+  color: #fcd34d;
+}
+
+.fa-none {
+  margin: 0;
+  font-size: 12px;
+  font-style: italic;
+  color: var(--subtle);
+}
+
+.fa-flag {
+  margin: 0 0 11px;
+  padding: 9px 11px;
+  border-radius: var(--r-sm);
+  background: rgba(167, 139, 250, 0.08);
+  border-left: 2px solid rgba(167, 139, 250, 0.5);
+  font-size: 11.5px;
+  color: var(--muted);
+}
+
+.fa-speakers {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.fa-speaker {
+  display: grid;
+  gap: 1px;
+  padding: 9px 13px;
+  border-radius: var(--r-sm);
+  border: 1px solid var(--surface-line-soft);
+  background: rgba(150, 132, 200, 0.05);
+}
+
+.fa-speaker strong {
+  font-size: 12.5px;
+  font-weight: 600;
+}
+
+.fa-speaker span {
+  font-size: 10.5px;
+  color: var(--muted);
+}
+
+.fa-figures {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+  gap: 1px;
+  border-radius: var(--r-sm);
+  overflow: hidden;
+  background: var(--surface-line-soft);
+}
+
+.fa-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 11px 13px;
+  background: #100d18;
+}
+
+.fa-row span {
+  font-size: 11.5px;
+  color: var(--muted);
+}
+
+.fa-row strong {
+  font-size: 13px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+}
+
+/* A figure that was never stated is set apart, so a blank cannot be mistaken
+   for a value CallPal failed to read. */
+.fa-row.unstated strong {
+  font-size: 11.5px;
+  font-weight: 500;
+  font-style: italic;
+  color: var(--subtle);
+}
+
+.fa-note {
+  margin: 11px 0 0;
+  font-size: 10.5px;
+  color: var(--subtle);
+  line-height: 1.5;
+}
+
+.fa-points {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 11px;
+}
+
+.fa-points li {
+  padding: 12px 13px;
+  border-radius: var(--r-sm);
+  border: 1px solid var(--surface-line-soft);
+}
+
+.fa-points.bull li {
+  border-left: 2px solid var(--green);
+  background: rgba(52, 211, 153, 0.05);
+}
+
+.fa-points.bear li {
+  border-left: 2px solid var(--red);
+  background: rgba(248, 113, 113, 0.05);
+}
+
+.fa-point-text {
+  margin: 0;
+  font-size: 12.5px;
+  line-height: 1.6;
+  color: var(--text);
+}
+
+/* Quotes are shown, not hidden behind a click. On the dashboard the space is
+   tight and a popover is right; here there is room, and seeing every claim
+   sourced at once is the point of the page. */
+.fa-points blockquote {
+  margin: 9px 0 0;
+  padding: 9px 11px;
+  border-radius: var(--r-xs);
+  background: rgba(0, 0, 0, 0.3);
+  font-size: 11.5px;
+  font-style: italic;
+  line-height: 1.6;
+  color: var(--text-dim);
+}
+
+.fa-who {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  margin-bottom: 5px;
+  font-size: 9px;
+  font-style: normal;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--subtle);
+}
+
+.fa-qa {
+  display: grid;
+  gap: 10px;
+}
+
+.fa-exchange {
+  border-radius: var(--r-sm);
+  border: 1px solid var(--surface-line-soft);
+  overflow: hidden;
+}
+
+.fa-exchange-top {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 13px;
+  background: rgba(150, 132, 200, 0.05);
+}
+
+.fa-analyst {
+  display: flex;
+  align-items: baseline;
+  gap: 7px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.fa-analyst em {
+  font-style: normal;
+  font-size: 10.5px;
+  color: var(--muted);
+}
+
+.fa-directness {
+  margin-left: auto;
+  padding: 3px 8px;
+  border-radius: 999px;
+  font-size: 8.5px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  background: rgba(255, 255, 255, 0.07);
+  color: var(--muted);
+}
+
+.fa-directness.direct {
+  background: rgba(52, 211, 153, 0.14);
+  color: #6ee7b7;
+}
+
+.fa-directness.partial {
+  background: rgba(251, 191, 36, 0.14);
+  color: #fcd34d;
+}
+
+.fa-directness.deflected {
+  background: rgba(248, 113, 113, 0.14);
+  color: #fca5a5;
+}
+
+.fa-q,
+.fa-a {
+  margin: 0;
+  padding: 12px 13px;
+  font-size: 12.5px;
+  line-height: 1.7;
+}
+
+.fa-q {
+  color: var(--text);
+  border-top: 1px solid var(--surface-line-soft);
+}
+
+.fa-a {
+  color: var(--text-dim);
+  border-top: 1px solid var(--surface-line-soft);
+}
+
+.fa-foot {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 4px 2px 8px;
+  font-size: 10.5px;
+  color: var(--subtle);
+}
+
+.fa-empty {
+  display: grid;
+  justify-items: center;
+  gap: 9px;
+  padding: 54px 24px;
+  text-align: center;
+  color: var(--muted);
+}
+
+.fa-empty h3 {
+  margin: 0;
+  font-size: 14px;
+  color: var(--text);
+}
+
+.fa-empty p {
+  margin: 0;
+  max-width: 380px;
+  font-size: 12px;
+  line-height: 1.6;
+}
+
+.fa-empty button {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 6px;
+  padding: 9px 15px;
+  border-radius: var(--r-sm);
+  border: 1px solid rgba(167, 139, 250, 0.36);
+  background: rgba(167, 139, 250, 0.14);
+  color: #ddd6fe;
+  font: inherit;
+  font-size: 11.5px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+/* The hand-off from the dashboard to the full analysis. A full-width target
+   rather than a small link — it is the main thing to do after reading the
+   summary. */
+.fa-jump {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  width: 100%;
+  padding: 15px 18px;
+  border-radius: var(--r-md);
+  border: 1px solid rgba(167, 139, 250, 0.26);
+  background: linear-gradient(
+    100deg,
+    rgba(167, 139, 250, 0.11),
+    rgba(167, 139, 250, 0.04)
+  );
+  color: var(--text);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition:
+    border-color 0.15s ease,
+    background 0.15s ease;
+}
+
+.fa-jump:hover {
+  border-color: rgba(167, 139, 250, 0.45);
+  background: linear-gradient(
+    100deg,
+    rgba(167, 139, 250, 0.17),
+    rgba(167, 139, 250, 0.06)
+  );
+}
+
+.fa-jump span {
+  display: grid;
+  gap: 3px;
+  font-size: 11.5px;
+  color: var(--muted);
+}
+
+.fa-jump strong {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.fa-jump svg {
+  margin-left: auto;
+  flex: none;
+  color: #c4b5fd;
 }

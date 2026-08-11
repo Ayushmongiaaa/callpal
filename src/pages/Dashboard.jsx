@@ -2,6 +2,7 @@ import React from "react";
 import { Area, AreaChart, ResponsiveContainer } from "recharts";
 import {
   ArrowCounterClockwise,
+  ArrowRight,
   CurrencyDollar,
   Gauge,
   TrendUp,
@@ -13,13 +14,20 @@ import FeaturedCall from "../components/FeaturedCall";
 import MetricCard from "../components/MetricCard";
 import SentimentChart from "../components/SentimentChart";
 import Takeaways from "../components/Takeaways";
-import CallBreakdown from "../components/CallBreakdown";
 
 import { sentimentSpark } from "../data/mockData";
 
 const GUIDANCE_STEPS = ["Lowered", "Maintained", "Raised"];
 
-export default function Dashboard({ call, prices, status, error, onFile, onReset }) {
+export default function Dashboard({
+  call,
+  prices,
+  status,
+  error,
+  onFile,
+  onReset,
+  onViewFull,
+}) {
   const riskDots = 5;
   const filled = Math.min(call.riskFlags ?? 0, riskDots);
 
@@ -52,7 +60,7 @@ export default function Dashboard({ call, prices, status, error, onFile, onReset
 
       <section className="hero-grid">
         <UploadCard onFile={onFile} status={status} error={error} />
-        <FeaturedCall call={call} />
+        <FeaturedCall call={call} onViewFull={onViewFull} />
       </section>
 
       <section className="metrics">
@@ -145,7 +153,18 @@ export default function Dashboard({ call, prices, status, error, onFile, onReset
         <Takeaways takeaways={call.takeaways} evidence={call.evidence} />
       </section>
 
-      <CallBreakdown call={call} />
+      {/* "Inside the call" used to live here, which made the dashboard scroll on
+          and on and duplicated what the full analysis page now shows properly.
+          The dashboard is the summary; the detail has its own page. */}
+      {!call.isDemo && (
+        <button className="fa-jump" onClick={onViewFull} type="button">
+          <span>
+            <strong>Read the full analysis</strong>
+            Every figure, the whole Q&amp;A, and each claim with its quote
+          </span>
+          <ArrowRight size={13} weight="bold" />
+        </button>
+      )}
 
       <footer className="foot">
         <span>

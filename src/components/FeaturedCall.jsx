@@ -9,14 +9,10 @@ import CompanyLogo from "./CompanyLogo";
 import GlassCubes from "./GlassCubes";
 import { downloadReport } from "../utils/report";
 
-export default function FeaturedCall({ call }) {
-  // Both of these did nothing before. A control that does not respond reads as
-  // unfinished no matter how good the work behind it is.
-  function viewFullAnalysis() {
-    document
-      .querySelector(".breakdown")
-      ?.scrollIntoView({ behavior: "smooth", block: "start" });
-  }
+export default function FeaturedCall({ call, onViewFull }) {
+  // This used to scroll to the bottom of the dashboard, which is not a
+  // different view — it is the same summary, further down. It opens the full
+  // analysis page now.
 
   return (
     <section className="featured glass">
@@ -49,7 +45,7 @@ export default function FeaturedCall({ call }) {
         <div className="featured-actions">
           <button
             className="btn-primary"
-            onClick={viewFullAnalysis}
+            onClick={onViewFull}
             disabled={call.isDemo}
             title={
               call.isDemo

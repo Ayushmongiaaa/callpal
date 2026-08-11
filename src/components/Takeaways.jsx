@@ -23,7 +23,7 @@ function QuotePopover({ anchor, source, tone, onClose }) {
   const card = useRef(null);
   const [pos, setPos] = useState(null);
 
-  useLayoutEffect(() => {
+  const measure = useCallback(() => {
     if (!anchor || !card.current) return;
 
     const a = anchor.getBoundingClientRect();
@@ -41,7 +41,9 @@ function QuotePopover({ anchor, source, tone, onClose }) {
     const left = Math.min(Math.max(EDGE, a.left), vw - width - EDGE);
 
     setPos({ top, left, width });
-  }, [anchor, source]);
+  }, [anchor]);
+
+  useLayoutEffect(measure, [measure, source]);
 
   useEffect(() => {
     const onKey = (e) => e.key === "Escape" && onClose();
@@ -49,21 +51,35 @@ function QuotePopover({ anchor, source, tone, onClose }) {
       if (!card.current?.contains(e.target) && !anchor?.contains(e.target)) onClose();
     };
 
+    // Follow the point on scroll rather than closing.
+    //
+    // Closing was the wrong call: you scroll a little to read the quote in
+    // context and it vanishes, so you have to click the same point again. It
+    // now stays glued to the takeaway it belongs to, and flips above/below as
+    // that point nears an edge. rAF-throttled so a fast scroll cannot queue up
+    // more work than the browser can paint.
+    let frame = 0;
+    const onScroll = () => {
+      if (frame) return;
+      frame = requestAnimationFrame(() => {
+        frame = 0;
+        measure();
+      });
+    };
+
     window.addEventListener("keydown", onKey);
     document.addEventListener("mousedown", onDown);
-    // Closing on scroll is deliberate. Tracking the anchor every frame is the
-    // alternative, and a quote box floating across a scrolling page looks worse
-    // than one that politely gets out of the way.
-    window.addEventListener("scroll", onClose, true);
-    window.addEventListener("resize", onClose);
+    window.addEventListener("scroll", onScroll, true);
+    window.addEventListener("resize", onScroll);
 
     return () => {
+      if (frame) cancelAnimationFrame(frame);
       window.removeEventListener("keydown", onKey);
       document.removeEventListener("mousedown", onDown);
-      window.removeEventListener("scroll", onClose, true);
-      window.removeEventListener("resize", onClose);
+      window.removeEventListener("scroll", onScroll, true);
+      window.removeEventListener("resize", onScroll);
     };
-  }, [anchor, onClose]);
+  }, [anchor, onClose, measure]);
 
   // Rendered into <body>, not in place.
   //

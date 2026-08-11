@@ -1,10 +1,6 @@
 import React, { useRef, useState } from "react";
-import {
-  CheckCircle,
-  SpinnerGap,
-  UploadSimple,
-  Warning,
-} from "@phosphor-icons/react";
+import { CheckCircle, UploadSimple, Warning } from "@phosphor-icons/react";
+import Working from "./Working";
 
 const formats = ["PDF", "DOCX", "TXT", "MP3", "WAV", "M4A", "MP4", "MOV"];
 
@@ -77,9 +73,9 @@ export default function UploadCard({ onFile, status, error }) {
         }}
       />
 
-      <div className={`upload-icon ${busy ? "spin" : ""}`}>
+      <div className={`upload-icon ${busy ? "busy" : ""}`}>
         {busy ? (
-          <SpinnerGap size={26} weight="bold" />
+          <Working size={26} />
         ) : status === "done" ? (
           <CheckCircle size={26} weight="fill" />
         ) : (

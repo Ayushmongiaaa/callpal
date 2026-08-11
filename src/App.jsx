@@ -4,6 +4,7 @@ import Topbar from "./components/Topbar";
 import CallAssistant from "./components/CallAssistant";
 import RecentCalls from "./components/RecentCalls";
 import Dashboard from "./pages/Dashboard";
+import FullAnalysis from "./pages/FullAnalysis";
 import {
   AlertsPage,
   CalendarPage,
@@ -69,6 +70,8 @@ export default function App() {
         return <AlertsPage loaded={libraryLoaded} library={library} onOpen={open} />;
       case "Compare":
         return <ComparePage loaded={libraryLoaded} library={library} onOpen={open} />;
+      case "Analysis":
+        return <FullAnalysis call={call} onBack={() => setActivePage("Dashboard")} />;
       default:
         return (
           <Dashboard
@@ -78,6 +81,7 @@ export default function App() {
             error={error}
             onFile={analyze}
             onReset={reset}
+            onViewFull={() => setActivePage("Analysis")}
           />
         );
     }
