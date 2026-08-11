@@ -189,12 +189,12 @@ export default function UploadCard({ onFile, status, error }) {
           <ul className="up-stages">
             {stages.map((s) => (
               <li className={s.state} key={s.key}>
+                {/* A pulsing dot, not the waveform. The waveform is five bars
+                    plus gaps — about 25px wide — and forcing it into a 15px
+                    bullet made it spill out as overlapping blobs. */}
                 <i>
-                  {s.state === "done" ? (
-                    <Check size={9} weight="bold" />
-                  ) : s.state === "active" ? (
-                    <Working size={9} />
-                  ) : null}
+                  {s.state === "done" ? <Check size={9} weight="bold" /> : null}
+                  {s.state === "active" ? <b /> : null}
                 </i>
                 {s.label}
               </li>

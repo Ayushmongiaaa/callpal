@@ -24,20 +24,32 @@ const BARS = [
 ];
 
 export default function Working({ size = 26 }) {
+  // Bar width and gap are derived from `size` rather than fixed.
+  //
+  // They used to be hardcoded at 3px and 2.5px, which meant the component had
+  // an intrinsic width of 25px no matter what it was told. Rendered at 9px
+  // inside a small bullet it spilled straight out of its container as
+  // overlapping blobs. Five bars plus four gaps now always come to 0.89 × size,
+  // so it fits whatever box it is given.
+  const bar = size / 9;
+  const gap = size / 12;
+
   return (
     <span
       className="working"
-      style={{ width: size, height: size }}
+      style={{ width: size, height: size, gap: `${gap}px` }}
       role="status"
       aria-label="Working"
     >
-      {BARS.map((bar, i) => (
+      {BARS.map((b, i) => (
         <i
           key={i}
           style={{
-            animationDelay: bar.delay,
-            animationDuration: bar.duration,
-            "--peak": bar.scale,
+            width: `${bar}px`,
+            borderRadius: `${Math.max(1, bar / 2)}px`,
+            animationDelay: b.delay,
+            animationDuration: b.duration,
+            "--peak": b.scale,
           }}
         />
       ))}

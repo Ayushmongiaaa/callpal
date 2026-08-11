@@ -1637,13 +1637,13 @@ body {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 2.5px;
+  /* gap and bar width come from the component, derived from `size`, so this
+     can never be wider than the box it is given. */
 }
 
 .working i {
-  width: 3px;
+  flex: none;
   height: 100%;
-  border-radius: 2px;
   background: currentColor;
   transform-origin: center;
   /* Starts collapsed rather than full height, so the first frame is not a
@@ -6202,6 +6202,32 @@ button.alert-row:hover,
 .up-stages li.active i {
   border-color: rgba(167, 139, 250, 0.55);
   color: #c4b5fd;
+}
+
+.up-stages li.active i b {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: #c4b5fd;
+  animation: upPulse 1.1s ease-in-out infinite;
+}
+
+@keyframes upPulse {
+  0%,
+  100% {
+    transform: scale(0.7);
+    opacity: 0.55;
+  }
+  50% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .up-stages li.active i b {
+    animation: none;
+  }
 }
 
 .up-elapsed {

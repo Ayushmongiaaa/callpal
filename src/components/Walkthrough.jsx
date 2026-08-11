@@ -1,4 +1,10 @@
-import React, { useCallback, useEffect, useLayoutEffect, useState } from "react";
+import React, {
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useRef,
+  useState,
+} from "react";
 import {
   Archive,
   ArrowLeft,
@@ -99,8 +105,11 @@ export default function Walkthrough({ delay = 4000 }) {
   const [rect, setRect] = useState(null);
 
   // Whether the spotlight is settled at its destination and safe to show.
-  // Nothing is drawn while a step change is in flight, so there is no travel.
   const [shown, setShown] = useState(false);
+
+  // True from the moment a step change starts until its glide has finished.
+  // While it is true, nothing else may write the spotlight's position.
+  const settling = useRef(false);
 
   // Runs on every page load rather than once per session.
   //
@@ -143,12 +152,23 @@ export default function Walkthrough({ delay = 4000 }) {
 
     let cancelled = false;
     let frame = 0;
+    let released = 0;
+    let finished = false;
 
     const place = () => {
-      if (cancelled) return;
+      if (cancelled || finished) return;
+      finished = true;
+
       const r = el.getBoundingClientRect();
       setRect({ top: r.top, left: r.left, width: r.width, height: r.height });
       setShown(true);
+
+      // Stay locked until the glide itself has finished. Releasing the moment
+      // the position is written let a stray scroll event overwrite the target
+      // mid-animation.
+      released = setTimeout(() => {
+        settling.current = false;
+      }, 470);
     };
 
     const box = el.getBoundingClientRect();
@@ -156,36 +176,65 @@ export default function Walkthrough({ delay = 4000 }) {
     // A fixed element cannot be scrolled to — it is already wherever it is
     // going to be. The last step targets the sample card, which is
     // `position: fixed` in the corner, and asking the page to scroll to it sent
-    // the page somewhere arbitrary while the card itself never moved. That is
-    // the "gets stuck and goes somewhere it should not" on the final step.
+    // the page somewhere arbitrary while the card itself never moved.
     const fixed = getComputedStyle(el).position === "fixed";
 
     const needsScroll =
       !fixed && (box.top < 80 || box.bottom > window.innerHeight - 80);
 
     if (!needsScroll) {
+      settling.current = true;
       place();
-      return undefined;
+      return () => {
+        cancelled = true;
+        clearTimeout(released);
+      };
     }
 
-    el.scrollIntoView({ block: "center", behavior: "smooth" });
+    // Locked for the whole scroll. Without this the manual-scroll tracker below
+    // is still live from the previous step, so it rewrites the position on every
+    // scroll event — the spotlight rides down the page and then snaps back when
+    // the real measurement lands. That is the overshoot-and-correct.
+    settling.current = true;
 
-    // Hold position while the page moves, and do not measure until it has
-    // stopped. The rail and the sidebar are `position: sticky`, so they keep
-    // shifting until the scroll ends — measuring early is what put the
-    // spotlight somewhere it did not belong.
-    const deadline = performance.now() + 1600;
+    // Scrolled by arithmetic rather than scrollIntoView, so the destination is
+    // known rather than negotiated: centre the element, unless it is too tall to
+    // centre, in which case put its top just below the header.
+    const margin = 84;
+    const room = window.innerHeight - margin * 2;
+    const offset =
+      box.height >= room ? margin : margin + (room - box.height) / 2;
+
+    const top = Math.max(0, window.scrollY + box.top - offset);
+    window.scrollTo({ top, behavior: "smooth" });
+
+    // `scrollend` is the browser telling us the smooth scroll is genuinely
+    // over. No amount of frame sampling matches that, so use it when it exists.
+    const onScrollEnd = () => place();
+    document.addEventListener("scrollend", onScrollEnd, true);
+
+    // Fallback for browsers without scrollend, plus a hard backstop. Eight
+    // consecutive still frames, on both axes: three was short enough that a
+    // plateau mid-scroll passed for the end of it.
+    const deadline = performance.now() + 1800;
     let lastTop = null;
+    let lastLeft = null;
     let stillFor = 0;
 
     const settled = () => {
-      if (cancelled) return;
+      if (cancelled || finished) return;
 
       const r = el.getBoundingClientRect();
-      stillFor = lastTop !== null && Math.abs(r.top - lastTop) < 0.5 ? stillFor + 1 : 0;
-      lastTop = r.top;
+      const steady =
+        lastTop !== null &&
+        Math.abs(r.top - lastTop) < 0.5 &&
+        Math.abs(r.left - lastLeft) < 0.5;
 
-      if (stillFor >= 3 || performance.now() > deadline) {
+      stillFor = steady ? stillFor + 1 : 0;
+      lastTop = r.top;
+      lastLeft = r.left;
+
+      if (stillFor >= 8 || performance.now() > deadline) {
         place();
         return;
       }
@@ -198,15 +247,19 @@ export default function Walkthrough({ delay = 4000 }) {
     return () => {
       cancelled = true;
       if (frame) cancelAnimationFrame(frame);
+      clearTimeout(released);
+      document.removeEventListener("scrollend", onScrollEnd, true);
     };
   }, [open, step]);
 
   /**
    * Keep the hole glued to its element if the user scrolls or resizes by hand.
    *
-   * This runs only once the spotlight is settled and visible, and it writes the
-   * position with no transition, so it tracks exactly rather than lagging
-   * behind — the user is driving, so following is correct here.
+   * The `settling` guard is the important part. Without it this stayed live
+   * from the previous step and fired on every scroll event of the tour's own
+   * animated scroll — dragging the spotlight down the page, then snapping when
+   * the real measurement arrived. Two things were writing the same position for
+   * different reasons; only one may be in charge at a time.
    */
   useEffect(() => {
     if (!open || !shown) return undefined;
@@ -215,6 +268,7 @@ export default function Walkthrough({ delay = 4000 }) {
     if (!el) return undefined;
 
     const sync = () => {
+      if (settling.current) return;
       const r = el.getBoundingClientRect();
       setRect({ top: r.top, left: r.left, width: r.width, height: r.height });
     };

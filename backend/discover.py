@@ -14,6 +14,7 @@ message rather than failing: uploading a file still works, and the app should
 degrade to that rather than break.
 """
 
+import os
 import re
 import time
 import urllib.parse
@@ -58,6 +59,63 @@ def _key() -> str:
     return key
 
 
+def _where_to_put_the_key() -> str:
+    """Where the key actually lives, which depends on where this is running.
+
+    Telling someone using the deployed site to edit `backend/.env` is nonsense —
+    they have no such file. Render sets RENDER in the environment.
+    """
+    if os.getenv("RENDER") or os.getenv("FRONTEND_ORIGIN"):
+        return "Set ALPHAVANTAGE_API_KEY in the Render dashboard."
+    return "Check ALPHAVANTAGE_API_KEY in backend/.env."
+
+
+# Alpha Vantage answers HTTP 200 for everything and explains itself in prose, so
+# the only way to tell a spent quota from a bad key is to read the sentence.
+#
+# The trap: their rate-limit message is "We have detected your API key as XXX and
+# our standard API rate limit is 25 requests per day...". It contains the words
+# "API key", so testing for those first reported a perfectly good key as
+# rejected. Quota is checked first, and the key test now looks for wording that
+# only appears when the key is genuinely wrong.
+_RATE_SIGNS = (
+    "rate limit",
+    "requests per day",
+    "premium",
+    "higher api call",
+    "subscribe",
+)
+
+_KEY_SIGNS = (
+    "invalid",
+    "missing",
+    "demo",
+    "not valid",
+)
+
+
+def _raise_for_note(note: str) -> None:
+    lowered = note.lower()
+
+    if any(s in lowered for s in _RATE_SIGNS):
+        raise RateLimited(
+            "The free Alpha Vantage tier allows about 25 requests a day and "
+            "that is used up for now. It resets tomorrow — uploading a "
+            "transcript still works in the meantime."
+        )
+
+    if any(s in lowered for s in _KEY_SIGNS):
+        raise NoKey(f"That Alpha Vantage key was rejected. {_where_to_put_the_key()}")
+
+    # Unrecognised. Quota is overwhelmingly the more common cause, and telling
+    # someone their key is broken when it is not sends them fixing the wrong
+    # thing — which is exactly what the old ordering did.
+    raise RateLimited(
+        "Company search is unavailable right now — the data provider said: "
+        f"{note[:160]}"
+    )
+
+
 def _get(params: dict) -> dict:
     """One Alpha Vantage call, with caching and its quirky errors decoded.
 
@@ -85,16 +143,7 @@ def _get(params: dict) -> dict:
     note = body.get("Note") or body.get("Information") or ""
 
     if note:
-        lowered = note.lower()
-        if "demo" in lowered or "api key" in lowered:
-            raise NoKey(
-                "That Alpha Vantage key was rejected. Check "
-                "ALPHAVANTAGE_API_KEY in backend/.env."
-            )
-        raise RateLimited(
-            "The free Alpha Vantage tier allows about 25 requests a day and "
-            "that is used up for now. Uploading a transcript still works."
-        )
+        _raise_for_note(note)
 
     if body.get("Error Message"):
         raise NotAvailable(str(body["Error Message"])[:200])
@@ -282,12 +331,19 @@ def _fetch_calendar(horizon: str = "3month") -> list[dict]:
     with urllib.request.urlopen(url, timeout=TIMEOUT) as response:
         body = response.read().decode("utf-8", errors="replace")
 
-    # Out of quota comes back as JSON even from the CSV endpoint.
+    # Out of quota comes back as JSON even from the CSV endpoint. Route it
+    # through the same reader so the calendar and the search cannot disagree
+    # about what went wrong.
     if body.lstrip().startswith("{"):
-        raise RateLimited(
-            "The free Alpha Vantage tier allows about 25 requests a day and "
-            "that is used up for now."
-        )
+        import json as _json
+
+        try:
+            payload = _json.loads(body)
+            note = payload.get("Note") or payload.get("Information") or ""
+        except ValueError:
+            note = ""
+
+        _raise_for_note(note or "rate limit")
 
     rows = []
     for row in csv.DictReader(io.StringIO(body)):
