@@ -128,31 +128,33 @@ export default function FullAnalysis({ call, onBack }) {
     <div className="fa">
       <header className="fa-top glass">
         <button className="fa-back" onClick={onBack} type="button">
-          <ArrowLeft size={13} weight="bold" />
+          <ArrowLeft size={12} weight="bold" />
           Dashboard
         </button>
 
-        <div className="fa-id">
-          <span className="fa-logo">
-            <CompanyLogo ticker={call.ticker} website={call.website} size={26} />
-          </span>
+        <div className="fa-top-row">
+          <div className="fa-id">
+            <span className="fa-logo">
+              <CompanyLogo ticker={call.ticker} website={call.website} size={30} />
+            </span>
 
-          <div>
-            <h1>{call.company}</h1>
-            <p>
-              {[call.ticker, call.quarter, call.date].filter(Boolean).join(" · ")}
-            </p>
+            <div>
+              <h1>{call.company}</h1>
+              <p>
+                {[call.ticker, call.quarter, call.date].filter(Boolean).join(" · ")}
+              </p>
+            </div>
           </div>
-        </div>
 
-        <button
-          className="fa-download"
-          onClick={() => downloadReport(call)}
-          type="button"
-        >
-          <DownloadSimple size={13} weight="bold" />
-          Download report
-        </button>
+          <button
+            className="fa-download"
+            onClick={() => downloadReport(call)}
+            type="button"
+          >
+            <DownloadSimple size={13} weight="bold" />
+            Download report
+          </button>
+        </div>
       </header>
 
       {call.summary && <p className="fa-lede glass">{call.summary}</p>}

@@ -152,7 +152,16 @@ export default function Walkthrough({ delay = 4000 }) {
     };
 
     const box = el.getBoundingClientRect();
-    const needsScroll = box.top < 80 || box.bottom > window.innerHeight - 80;
+
+    // A fixed element cannot be scrolled to — it is already wherever it is
+    // going to be. The last step targets the sample card, which is
+    // `position: fixed` in the corner, and asking the page to scroll to it sent
+    // the page somewhere arbitrary while the card itself never moved. That is
+    // the "gets stuck and goes somewhere it should not" on the final step.
+    const fixed = getComputedStyle(el).position === "fixed";
+
+    const needsScroll =
+      !fixed && (box.top < 80 || box.bottom > window.innerHeight - 80);
 
     if (!needsScroll) {
       place();

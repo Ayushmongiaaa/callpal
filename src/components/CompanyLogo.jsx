@@ -21,8 +21,11 @@ const BUILT_IN = {
   AAPL: AppleMark,
 };
 
+// 256px rather than 128. These are drawn as small as 14px and as large as 42px,
+// and on a 2x display a 42px slot wants 84 real pixels — 128 was already
+// marginal and any upscale past that showed immediately.
 const SOURCES = [
-  (d) => `https://www.google.com/s2/favicons?domain=${d}&sz=128`,
+  (d) => `https://www.google.com/s2/favicons?domain=${d}&sz=256`,
   (d) => `https://icons.duckduckgo.com/ip3/${d}.ico`,
 ];
 
