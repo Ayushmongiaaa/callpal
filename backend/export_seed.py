@@ -26,11 +26,16 @@ OUT = os.path.join(os.path.dirname(os.path.abspath(__file__)), "seed_calls.json"
 # repository. Transcripts are the large part; three is a few hundred KB.
 MAX_CALLS = 3
 
+# How far back to look for those three. Re-analyzing the same call while testing
+# is completely normal, so the newest three rows are often the same call three
+# times — which would seed the demo with three identical companies.
+SCAN = 40
+
 
 def main() -> int:
     store.init()
 
-    library = store.recent(limit=MAX_CALLS)
+    library = store.recent(limit=SCAN)
 
     if not library:
         print("No calls in the local database yet.")
@@ -38,8 +43,21 @@ def main() -> int:
         return 1
 
     out = []
+    seen = set()
+    skipped = 0
 
     for row in library:
+        if len(out) >= MAX_CALLS:
+            break
+
+        # One call per company and quarter. The demo should show a range of
+        # companies, not the same one repeated.
+        key = (row.get("ticker") or row.get("company") or "", row.get("quarter") or "")
+        if key in seen:
+            skipped += 1
+            continue
+        seen.add(key)
+
         call = store.get(row["id"])
         if not call:
             continue
@@ -64,6 +82,16 @@ def main() -> int:
     for call in out:
         a = call["analysis"]
         print(f"  · {a.get('company', '?')} — {a.get('quarter', '?')}")
+
+    if skipped:
+        print(f"\nSkipped {skipped} repeat analysis(es) of a call already included.")
+
+    if len(out) < 2:
+        print(
+            "\nOnly one company here. Analyze a couple of others and run this "
+            "again — the Compare and Trends pages need more than one to show "
+            "anything."
+        )
 
     print("\nCommit that file and every deployment will boot with these calls.")
     return 0
