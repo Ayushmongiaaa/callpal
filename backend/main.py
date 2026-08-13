@@ -304,17 +304,24 @@ def diag_provider():
     except Exception as exc:  # noqa: BLE001 - the point is to report anything
         return {"key": shape, "provider": f"request failed: {type(exc).__name__}: {exc}"}
 
+    # Alpha Vantage echoes the key back inside its own error text
+    # ("We have detected your API key as ABC123 and our rate limit is..."), so
+    # masking only our own fields was not enough — the provider leaked it for
+    # us, on a public endpoint. Anything sent back from here is scrubbed.
+    def redact(text: str) -> str:
+        return (text or "").replace(key, "«redacted»")
+
     try:
         data = json.loads(body)
     except ValueError:
-        return {"key": shape, "provider_raw": body[:400]}
+        return {"key": shape, "provider_raw": redact(body[:400])}
 
     note = data.get("Information") or data.get("Note") or data.get("Error Message")
 
     return {
         "key": shape,
         "provider_keys": list(data.keys())[:6],
-        "provider_message": note,
+        "provider_message": redact(note) if note else None,
         "got_results": bool(data.get("bestMatches")),
         # How CallPal classifies that message, so a misclassification is visible
         # rather than hidden behind the friendly wording.
