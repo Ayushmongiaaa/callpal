@@ -262,6 +262,80 @@ def stats():
     return store.stats()
 
 
+@app.get("/diag/provider")
+def diag_provider():
+    """What the data provider actually says, verbatim.
+
+    Added because the app was reporting "your 25 daily requests are used up" to
+    someone who had not made a request in two days. That message is CallPal's
+    interpretation of a sentence the provider sent, and an interpretation is a
+    guess until you read the original.
+
+    This makes one real request and returns the raw reply. The key itself is
+    never included — only its length and shape, which is enough to tell a
+    correct key from a truncated one, a placeholder, or one with a stray space.
+    """
+    import json
+    import urllib.parse
+    import urllib.request
+
+    from config import setting
+
+    key = setting("ALPHAVANTAGE_API_KEY") or ""
+
+    shape = {
+        "key_present": bool(key),
+        "key_length": len(key),
+        "key_is_alnum": key.isalnum() if key else False,
+        "key_has_whitespace": key != key.strip(),
+        "looks_like_placeholder": key.lower() in {"demo", "your-key-here", "changeme"},
+    }
+
+    if not key:
+        return {"key": shape, "provider": "no key configured"}
+
+    url = "https://www.alphavantage.co/query?" + urllib.parse.urlencode(
+        {"function": "SYMBOL_SEARCH", "keywords": "ibm", "apikey": key}
+    )
+
+    try:
+        with urllib.request.urlopen(url, timeout=20) as response:
+            body = response.read().decode("utf-8", "replace")
+    except Exception as exc:  # noqa: BLE001 - the point is to report anything
+        return {"key": shape, "provider": f"request failed: {type(exc).__name__}: {exc}"}
+
+    try:
+        data = json.loads(body)
+    except ValueError:
+        return {"key": shape, "provider_raw": body[:400]}
+
+    note = data.get("Information") or data.get("Note") or data.get("Error Message")
+
+    return {
+        "key": shape,
+        "provider_keys": list(data.keys())[:6],
+        "provider_message": note,
+        "got_results": bool(data.get("bestMatches")),
+        # How CallPal classifies that message, so a misclassification is visible
+        # rather than hidden behind the friendly wording.
+        "callpal_reads_this_as": (
+            "ok" if not note else _classify(note)
+        ),
+    }
+
+
+def _classify(note: str) -> str:
+    try:
+        discover._raise_for_note(note)
+    except discover.RateLimited:
+        return "RateLimited"
+    except discover.NoKey:
+        return "NoKey"
+    except discover.NotAvailable:
+        return "NotAvailable"
+    return "ok"
+
+
 @app.get("/notifications")
 def notifications():
     """What the bell shows: what is coming up, and what was found.
