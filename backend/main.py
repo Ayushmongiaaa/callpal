@@ -337,14 +337,14 @@ def notifications():
 
 @app.get("/search")
 def search(q: str):
-    """Company lookup for the search bar."""
-    if not discover.configured():
-        return {"results": [], "enabled": False}
+    """Company lookup for the search bar.
 
+    No longer gated on an Alpha Vantage key: lookup goes through Yahoo, which
+    needs no key and has no daily cap. The key is only needed to *fetch* a
+    transcript, which is one request per analysis rather than one per keystroke.
+    """
     try:
         return {"results": discover.search(q), "enabled": True}
-    except discover.NoKey as exc:
-        raise HTTPException(status_code=503, detail=str(exc)) from exc
     except discover.RateLimited as exc:
         raise HTTPException(status_code=429, detail=str(exc)) from exc
     except Exception as exc:

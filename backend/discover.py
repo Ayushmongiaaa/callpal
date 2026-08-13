@@ -152,21 +152,75 @@ def _get(params: dict) -> dict:
     return body
 
 
-def search(query: str, limit: int = 6) -> list[dict]:
-    """Companies matching a name or ticker, US listings first."""
-    query = query.strip()
+def _search_yahoo(query: str, limit: int) -> list[dict]:
+    """Symbol lookup through Yahoo Finance. No key, no daily cap.
 
-    if len(query) < 2:
-        return []
+    Typing is where a request budget goes to die: every few keystrokes is
+    another lookup, and Alpha Vantage's free tier allows about 25 a day in
+    total. Spending that on autocomplete meant the quota was gone before anyone
+    had analyzed anything.
 
+    Yahoo has no such cap, and yfinance is already a dependency for the price
+    charts, so this costs nothing to add. Alpha Vantage is now only touched when
+    a transcript is actually fetched — one request per analysis instead of one
+    per keystroke.
+    """
+    import yfinance as yf
+
+    quotes = yf.Search(
+        query,
+        max_results=limit * 3,
+        news_count=0,
+        lists_count=0,
+        enable_fuzzy_query=True,
+        raise_errors=True,
+    ).quotes or []
+
+    results = []
+
+    for q in quotes:
+        if not isinstance(q, dict):
+            continue
+
+        symbol = (q.get("symbol") or "").strip().upper()
+        kind = (q.get("quoteType") or "").upper()
+
+        # Equities only, and skip foreign listings of the same company — they
+        # clutter the list and rarely have a transcript behind them.
+        if not symbol or "." in symbol or kind not in ("EQUITY", ""):
+            continue
+
+        name = (
+            q.get("shortname")
+            or q.get("longname")
+            or q.get("shortName")
+            or q.get("longName")
+            or symbol
+        )
+
+        results.append(
+            {
+                "symbol": symbol,
+                "name": str(name).strip(),
+                "type": kind.title() or "Equity",
+                "region": q.get("exchDisp") or q.get("exchange") or "",
+                "currency": "",
+                # Yahoo returns these already ranked, so position is the score.
+                "score": 1.0 - len(results) * 0.01,
+            }
+        )
+
+    return results[:limit]
+
+
+def _search_alphavantage(query: str, limit: int) -> list[dict]:
+    """The original lookup, kept as a fallback if Yahoo is unreachable."""
     body = _get({"function": "SYMBOL_SEARCH", "keywords": query})
     matches = body.get("bestMatches") or []
 
     results = []
     for m in matches:
         symbol = m.get("1. symbol", "")
-        # Skip foreign listings of the same company — they clutter the list and
-        # rarely have a transcript behind them.
         if not symbol or "." in symbol:
             continue
 
@@ -183,6 +237,39 @@ def search(query: str, limit: int = 6) -> list[dict]:
 
     results.sort(key=lambda r: (r["region"] != "United States", -r["score"]))
     return results[:limit]
+
+
+def search(query: str, limit: int = 6) -> list[dict]:
+    """Companies matching a name or ticker.
+
+    Yahoo first because it is uncapped; Alpha Vantage only if Yahoo fails and a
+    key exists. Search must not be the thing that exhausts the transcript quota.
+    """
+    query = query.strip()
+
+    if len(query) < 2:
+        return []
+
+    cache_key = f"search:{query.lower()}:{limit}"
+    hit = _cache.get(cache_key)
+    if hit and time.time() - hit[0] < CACHE_TTL:
+        return hit[1]
+
+    try:
+        results = _search_yahoo(query, limit)
+    except Exception:
+        # Any failure at all — network, a shape change, a rename upstream —
+        # falls through rather than breaking the search box.
+        results = []
+
+    if not results and configured():
+        try:
+            results = _search_alphavantage(query, limit)
+        except (RateLimited, NoKey, NotAvailable):
+            results = []
+
+    _cache[cache_key] = (time.time(), results)
+    return results
 
 
 def recent_quarters(count: int = 8, today=None) -> list[str]:

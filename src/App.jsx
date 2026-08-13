@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import Sidebar from "./components/Sidebar";
 import Topbar from "./components/Topbar";
 import CallAssistant from "./components/CallAssistant";
@@ -38,11 +38,19 @@ export default function App() {
     reset,
     openCall,
     removeCall,
+    clearError,
   } = useCallPal();
 
   // Watches the API and clears itself when it comes back, so a backend that
   // died while the tab was open no longer needs a manual reload.
   const { online, waking, checking, retry } = useBackend();
+
+  // A connection error should not outlive the outage that caused it. Once the
+  // API answers again, clear it — otherwise the upload card keeps insisting the
+  // backend is unreachable while the rest of the page is plainly working.
+  useEffect(() => {
+    if (online) clearError();
+  }, [online, clearError]);
 
   // Opening a stored call always drops you back on the dashboard, which is
   // the only page that renders a full analysis.

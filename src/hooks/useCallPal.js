@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 import {
+  IS_HOSTED,
   analyzeSymbol,
   analyzeTranscript,
   askCallPal,
@@ -281,6 +282,11 @@ export default function useCallPal() {
     openCall,
     removeCall,
     refreshLibrary,
+
+    // So a connection error can be cleared the moment the API answers again,
+    // rather than sitting on screen contradicting a working app until the next
+    // upload happens to succeed.
+    clearError: useCallback(() => setError(""), []),
   };
 }
 
@@ -289,11 +295,18 @@ function readError(err) {
   if (detail) return detail;
 
   if (err?.code === "ECONNABORTED") {
-    return "That took too long. Long transcripts can exceed the time limit — try a shorter one.";
+    return IS_HOSTED
+      ? "That took too long. The free host has a time limit — try a shorter transcript."
+      : "That took too long. Long transcripts can exceed the time limit — try a shorter one.";
   }
 
+  // Unreachable means two entirely different things depending on where this is
+  // running, and only one of them involves a port number. Telling a visitor on
+  // the live site to check port 8000 is meaningless — they have no backend.
   if (!err?.response) {
-    return "Could not reach the CallPal API. Make sure the backend is running on port 8000.";
+    return IS_HOSTED
+      ? "Could not reach the CallPal API. The free host sleeps after inactivity and takes up to a minute to wake — try again in a moment."
+      : "Could not reach the CallPal API. Start it with ./dev.sh in the project folder.";
   }
 
   return "Something went wrong analyzing that file.";

@@ -237,7 +237,10 @@ def main_tests():
 
     r = client.get("/search", params={"q": "nvidia"})
     check("search answers even with no provider key", r.status_code == 200, r.status_code)
-    check("and reports itself as disabled", r.json().get("enabled") is False)
+    # Search is no longer gated on an Alpha Vantage key — it goes through Yahoo,
+    # which needs none. It reports itself enabled even with no key configured,
+    # because it genuinely is.
+    check("and is enabled without a key", r.json().get("enabled") is True)
 
     # The provider is stubbed here — these check our parsing and quarter walk,
     # not their servers.
@@ -276,12 +279,55 @@ def main_tests():
 
     discover._get = fake_get
 
+    # Company search goes through Yahoo now — no key, no daily cap — so the
+    # provider is stubbed the same way the transcript endpoint is.
+    import sys
+    import types
+
+    class FakeYahooSearch:
+        def __init__(self, query, **kwargs):
+            self.quotes = [
+                {"symbol": "NVDA", "shortname": "NVIDIA Corporation",
+                 "quoteType": "EQUITY", "exchDisp": "NasdaqGS"},
+                {"symbol": "NVD.DE", "shortname": "NVIDIA (Frankfurt)",
+                 "quoteType": "EQUITY", "exchDisp": "XETRA"},
+                {"symbol": "SPY", "shortname": "SPDR S&P 500 ETF",
+                 "quoteType": "ETF", "exchDisp": "NYSEArca"},
+            ]
+
+    sys.modules["yfinance"] = types.SimpleNamespace(Search=FakeYahooSearch)
+    discover._cache.clear()
+
     found = discover.search("nvidia")
     check("search returns matches", len(found) == 1, found)
     check("foreign listings are filtered out", found[0]["symbol"] == "NVDA")
+    check("funds are filtered out", all(f["symbol"] != "SPY" for f in found))
 
+    # Search must not consume the transcript provider's daily quota.
+    before = len(calls_made)
+    discover._cache.clear()
+    discover.search("nvidia")
+    check("search costs no Alpha Vantage requests", len(calls_made) == before)
+
+    # And if Yahoo is unreachable, the search box degrades rather than breaking.
+    class BrokenYahoo:
+        def __init__(self, *a, **k):
+            raise RuntimeError("network unreachable")
+
+    sys.modules["yfinance"] = types.SimpleNamespace(Search=BrokenYahoo)
+    discover._cache.clear()
+    check("a dead search provider returns empty, not an error",
+          discover.search("nvidia") == [])
+
+    sys.modules["yfinance"] = types.SimpleNamespace(Search=FakeYahooSearch)
+    discover._cache.clear()
+
+    # Counted from here rather than from the top of the block: the old total
+    # silently included a request that company search used to make, so the
+    # threshold was measuring two things at once.
+    calls_made.clear()
     t = discover.latest_transcript("NVDA")
-    check("the walk-back skips an unpublished quarter", len(calls_made) >= 3, len(calls_made))
+    check("the walk-back skips an unpublished quarter", len(calls_made) >= 2, len(calls_made))
     check("turns become speaker-labelled text", "JENSEN HUANG (CEO):" in t["text"])
     check("a real quarter is reported", t["quarter"].endswith(("Q1", "Q2", "Q3", "Q4")))
 

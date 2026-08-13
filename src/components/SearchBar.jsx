@@ -6,7 +6,7 @@ import {
   SpinnerGap,
   Warning,
 } from "@phosphor-icons/react";
-import { searchCompanies } from "../services/api";
+import { IS_HOSTED, searchCompanies } from "../services/api";
 import CompanyLogo from "./CompanyLogo";
 
 /**
@@ -84,8 +84,12 @@ export default function SearchBar({ onPick, busy }) {
         if (cancelled) return;
 
         if (data.enabled === false) {
+          // Where the key goes depends on where this is running, and only one
+          // of the two answers involves a file on disk.
           setMessage(
-            "Company search needs a free Alpha Vantage key in backend/.env. You can still upload a transcript.",
+            IS_HOSTED
+              ? "Company search is not configured on this deployment. Uploading a transcript still works."
+              : "Company search needs a free Alpha Vantage key in backend/.env. You can still upload a transcript.",
           );
           setResults([]);
         } else {
