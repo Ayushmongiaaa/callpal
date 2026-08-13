@@ -27,7 +27,15 @@ TIMEOUT = 25
 
 # question -> (fetched_at, payload)
 _cache: dict[str, tuple[float, object]] = {}
-CACHE_TTL = 60 * 30
+
+# Six hours, not thirty minutes.
+#
+# A published transcript for a quarter that has already happened never changes,
+# so a short TTL bought nothing and cost real requests: looking at the same
+# company twice in an afternoon spent the budget twice. The walk-back can use
+# up to four requests to find a company's latest call, so with 25 a day that is
+# the difference between roughly six companies and roughly twelve.
+CACHE_TTL = 60 * 60 * 6
 
 
 class NoKey(Exception):
@@ -98,10 +106,14 @@ def _raise_for_note(note: str) -> None:
     lowered = note.lower()
 
     if any(s in lowered for s in _RATE_SIGNS):
+        # Written for the person reading it, who does not know or care who the
+        # data provider is. Lead with what happened and what still works —
+        # company search is unaffected now that it runs on Yahoo, so the only
+        # thing lost is pulling a published transcript automatically.
         raise RateLimited(
-            "The free Alpha Vantage tier allows about 25 requests a day and "
-            "that is used up for now. It resets tomorrow — uploading a "
-            "transcript still works in the meantime."
+            "Pulling published transcripts is out for today — the free data "
+            "tier allows about 25 a day and resets at midnight UTC. Searching "
+            "and uploading your own transcript both still work normally."
         )
 
     if any(s in lowered for s in _KEY_SIGNS):
