@@ -28,6 +28,7 @@ from pydantic import BaseModel
 load_dotenv()
 
 import discover  # noqa: E402
+import seed  # noqa: E402
 import store  # noqa: E402
 from dates import normalise as normalise_date  # noqa: E402
 from analyzer import (  # noqa: E402
@@ -68,6 +69,16 @@ app.add_middleware(
 )
 
 store.init()
+
+# A free instance rebuilds its database empty on every restart, so without this
+# the live site regularly opens with nothing in it. Seeds only load into an
+# empty library — they can never overwrite real analyses.
+try:
+    _seeded = seed.load(store)
+    if _seeded:
+        print(f"Seeded {_seeded} call(s) into an empty library.")
+except Exception as exc:  # noqa: BLE001 - seeding must never block startup
+    print(f"Seeding skipped: {exc}")
 
 
 class ChatRequest(BaseModel):

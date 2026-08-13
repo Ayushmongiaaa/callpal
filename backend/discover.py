@@ -106,14 +106,20 @@ def _raise_for_note(note: str) -> None:
     lowered = note.lower()
 
     if any(s in lowered for s in _RATE_SIGNS):
-        # Written for the person reading it, who does not know or care who the
-        # data provider is. Lead with what happened and what still works —
-        # company search is unaffected now that it runs on Yahoo, so the only
-        # thing lost is pulling a published transcript automatically.
+        # Deliberately does not promise a reset.
+        #
+        # The provider throttles by IP as well as by key, and free hosting puts
+        # many tenants behind one shared address — so this refusal is often
+        # nothing to do with this key's own usage, and waiting for "tomorrow"
+        # does not help. Saying "resets at midnight" sent someone off to wait
+        # for a reset that was never coming. Say only what is true: the
+        # provider is refusing, and here is the path that works.
         raise RateLimited(
-            "Pulling published transcripts is out for today — the free data "
-            "tier allows about 25 a day and resets at midnight UTC. Searching "
-            "and uploading your own transcript both still work normally."
+            "The transcript provider is refusing requests from this server "
+            "right now — its free tier is limited per day and per address, and "
+            "on shared hosting that budget is not ours alone. Upload a "
+            "transcript file instead; that path is unaffected and gives the "
+            "identical analysis."
         )
 
     if any(s in lowered for s in _KEY_SIGNS):
